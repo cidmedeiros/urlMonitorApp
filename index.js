@@ -47,8 +47,7 @@ const server = http.createServer((req, res) =>{
         console.log(`These are the requests headers: ${headers}`);
         });
         console.log(`This is the payload: ${buffer}`);
-        });
-
+        
 });
 
 server.listen(3000, () =>{
