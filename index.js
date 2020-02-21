@@ -6,6 +6,7 @@
 const http = require('http');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
+const util = require('util')
 
 //Set Server
 const server = http.createServer((req, res) =>{
@@ -42,12 +43,10 @@ const server = http.createServer((req, res) =>{
         //send response
         res.end('Hello Wolrd\n');
 
-        //log the request path
         console.log(`Request received on path: ${trimmedPath} with method: ${method} with query params:`, queryStringObject);
-        console.log(`These are the requests headers: ${headers}`);
-        });
-        console.log(`This is the payload: ${buffer}`);
-        
+        console.log('This is the payload: ', buffer);
+        console.log(`These are the requests headers: ${util.inspect(headers,false,null,true)}`);
+    });
 });
 
 server.listen(3000, () =>{
