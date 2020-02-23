@@ -33,11 +33,13 @@ const server = http.createServer((req, res) => {
     //get the payload as an object, if any
     let decoder = new StringDecoder('utf-8');
     let buffer = '';
-    //on means event emitter (stream of data). The name of the event is data
+
+    //on means event emitter. The data means stream of data
     req.on('data', (data) =>{
         buffer += decoder.write(data);
     });
-
+    
+    //end finalizes the event emitter
     req.on('end', () =>{
         //cuts off data stream
         buffer += decoder.end();
@@ -45,6 +47,7 @@ const server = http.createServer((req, res) => {
         //Verifies the handler this request should go to.
         //If one is not found, it should go to notFound handler.
         let chosenhandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound
+        console.log('handler is:',chosenhandler);
 
         //construct the data object to send to the chosenhandler
         let data = {
@@ -56,15 +59,21 @@ const server = http.createServer((req, res) => {
         }
 
         //setting up a general router to route the request to the handlers
-        
+        chosenhandler(data, (statusCode, handlerPayload) => {
+            //use the handler statusCode or default to 200
+            statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
 
+            //use the handler payload object if any or default to {}
+            handlerPayload = typeof(handlerPayload) ? handlerPayload : {};
 
-        //send response
-        res.end('Hello Wolrd\n');
+            //convert the handlerPayload to String to be sent to the user
+            let handlerPayloadString = JSON.stringify(handlerPayload);
 
-        console.log(`Request received on path: ${trimmedPath} with method: ${method} with query params:`, queryStringObject);
-        console.log('This is the payload: ', buffer);
-        console.log(`These are the requests headers: ${util.inspect(headers,false,null,true)}`);
+            //Return the responses
+            res.writeHead(statusCode);
+            res.end(handlerPayloadString);
+            console.log('Returning this response', statusCode, handlerPayloadString);
+        })
     });
 });
 
@@ -78,6 +87,7 @@ var handlers = {};
 
 //Define Sample Handler
 handlers.sample = (data, callback) => {
+    //call a http status code, and a handler payload object
     callback(406, {'name':'sample handler'});
 };
 
