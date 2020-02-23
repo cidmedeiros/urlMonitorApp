@@ -7,20 +7,20 @@ let environments = {}
 //define the staging enviroment (default)
 environments.staging = {
     'port': 3000,
-    envName = 'staging'
+    'envName' : 'staging'
 }
 
 //define the production enviroment
-environments.staging = {
+environments.production = {
     'port': 5000,
-    envName = 'production'
+    'envName' : 'production'
 }
 
 //Determine which environment was passed as a command-line argument
 let currentEnv = (typeof process.env.NODE_ENV) == 'string' ? process.env.NODE_ENV.toLocaleLowerCase() : '';
 
 //Determine which environment to export
-let toExportEnv = (typeof currentEnv) == 'object' ? environments[currentEnv] : environments.staging;
+let toExportEnv = (typeof environments[currentEnv]) == 'object' ? environments[currentEnv] : environments.staging;
 
 //Export the determined ENV
 module.exports = toExportEnv;

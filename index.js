@@ -6,7 +6,8 @@
 const http = require('http');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
-const util = require('util')
+const util = require('util');
+const config = require('./config');
 
 //Set Server -> it processes the incoming data embedded in the request object then assigns the associated action to it
 const server = http.createServer((req, res) => {
@@ -78,9 +79,11 @@ const server = http.createServer((req, res) => {
     });
 });
 
-//Start the server and have it listen to the available port
-server.listen(3000, () =>{
-    console.log('Listening on port 3000');
+//Start the server and have it listen to the Env port
+//command line to specify Env when init server:
+//NODE_ENV=modeName node fileName
+server.listen(config.port, () =>{
+    console.log(`Server running on ${config.envName} mode, and listening on port ${config.port}`);
 })
 
 //Define the handlers
