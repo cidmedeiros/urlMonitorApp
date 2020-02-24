@@ -10,6 +10,7 @@ const StringDecoder = require('string_decoder').StringDecoder;
 const util = require('util');
 const config = require('./config');
 const fs = require('fs');
+const schriber = require('./lib/data');
 
 //Instantiate HTTP server
 const httpServer = http.createServer((req, res) => {
