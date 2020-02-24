@@ -4,14 +4,40 @@
 
 //Dependencies
 const http = require('http');
+const https = require('https')
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const util = require('util');
 const config = require('./config');
+const fs = require('fs');
+
+//Instantiate HTTP server
+const httpServer = http.createServer((req, res) => {
+    unifiedServer(req, res);
+});
+
+//Start the HTTP server and have it listen to the Env port
+httpServer.listen(config.httpPort, () =>{
+    console.log(`Server running on ${config.envName} mode, and listening on port ${config.httpPort} with HTTP protocol`);
+});
+
+//Instantiate HTTPS server
+const httpsServerOptions = {
+    'key': fs.readFileSync('./https/key.pem'),
+    'cert': fs.readFileSync('./https/cert.pem')
+};
+
+const httpsServer = https.createServer(httpsServerOptions,(req, res) => {
+    unifiedServer(req, res);
+});
+
+//Start the HTTPS server and have it listen to the Env port
+httpsServer.listen(config.httpsPort, () =>{
+    console.log(`Server running on ${config.envName} mode, and listening on port ${config.httpsPort} with HTTPS protocol`);
+});
 
 //Set Server -> it processes the incoming data embedded in the request object then assigns the associated action to it
-const server = http.createServer((req, res) => {
-
+let unifiedServer = (req, res) => {
     //get the URl and parse it
     //the true argmnt tells the url module to call the query-stream module
     let parseUrl = url.parse(req.url, true);
@@ -77,14 +103,7 @@ const server = http.createServer((req, res) => {
             console.log('Returning this response', statusCode, handlerPayloadString);
         })
     });
-});
-
-//Start the server and have it listen to the Env port
-//command line to specify Env when init server:
-//NODE_ENV=modeName node fileName
-server.listen(config.port, () =>{
-    console.log(`Server running on ${config.envName} mode, and listening on port ${config.port}`);
-})
+};
 
 //Define the handlers
 var handlers = {};

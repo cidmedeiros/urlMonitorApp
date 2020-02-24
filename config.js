@@ -1,4 +1,6 @@
-/* Create and export configuration variables */
+/* Create and export configuration variables
+Attention: the command line to specify Env when init server is: NODE_ENV=modeName node fileName
+ */
 
 //Container for all the environments
 
@@ -6,13 +8,15 @@ let environments = {}
 
 //define the staging enviroment (default)
 environments.staging = {
-    'port': 3000,
+    'httpPort': 3000,
+    'httpsPort': 3001,
     'envName' : 'staging'
 }
 
 //define the production enviroment
 environments.production = {
-    'port': 5000,
+    'httpPort': 5000,
+    'httpsPort': 5001,
     'envName' : 'production'
 }
 
