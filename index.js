@@ -10,7 +10,7 @@ const StringDecoder = require('string_decoder').StringDecoder;
 const util = require('util');
 const config = require('./config');
 const fs = require('fs');
-const schriber = require('./lib/data');
+const handlers = require('./lib/handlers');
 
 //Instantiate HTTP server
 const httpServer = http.createServer((req, res) => {
@@ -37,7 +37,7 @@ httpsServer.listen(config.httpsPort, () =>{
     console.log(`Server running on ${config.envName} mode, and listening on port ${config.httpsPort} with HTTPS protocol`);
 });
 
-//Set Server -> it processes the incoming data embedded in the request object then assigns the associated action to it
+//Server seetings -> it processes the incoming url/data embedded in the request object then assigns the associated action to it
 let unifiedServer = (req, res) => {
     //get the URl and parse it
     //the true argmnt tells the url module to call the query-stream module
@@ -105,20 +105,6 @@ let unifiedServer = (req, res) => {
         })
     });
 };
-
-//Define the handlers
-var handlers = {};
-
-//Define Sample Handler
-handlers.ping = (data, callback) => {
-    //route to inform the requestee that the app is alive
-    callback(200);
-};
-
-//Not found handler
-handlers.notFound = (data, callback) => {
-    callback(404);
-}
 
 //Define a request router
 const router = {
