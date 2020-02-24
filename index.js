@@ -12,10 +12,6 @@ const config = require('./config');
 const fs = require('fs');
 const schriber = require('./lib/data');
 
-schriber.delete('test', 'newFile', (err) => {
-    console.log('Process final message:', err);
-});
-
 //Instantiate HTTP server
 const httpServer = http.createServer((req, res) => {
     unifiedServer(req, res);
