@@ -109,9 +109,9 @@ let unifiedServer = (req, res) => {
 var handlers = {};
 
 //Define Sample Handler
-handlers.sample = (data, callback) => {
-    //call a http status code, and a handler payload object
-    callback(406, {'name':'sample handler'});
+handlers.ping = (data, callback) => {
+    //route to inform the requestee that the app is alive
+    callback(200);
 };
 
 //Not found handler
@@ -121,5 +121,5 @@ handlers.notFound = (data, callback) => {
 
 //Define a request router
 const router = {
-    'sample': handlers.sample
+    'ping': handlers.ping
 };
