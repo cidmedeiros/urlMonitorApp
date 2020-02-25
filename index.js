@@ -11,6 +11,7 @@ const util = require('util');
 const config = require('./config');
 const fs = require('fs');
 const handlers = require('./lib/handlers');
+const tools = require('./lib/tools');
 
 //Instantiate HTTP server
 const httpServer = http.createServer((req, res) => {
@@ -83,7 +84,7 @@ let unifiedServer = (req, res) => {
             'queryStringObject': queryStringObject,
             'method': method,
             'headers': headers,
-            'payload': buffer
+            'payload': tools.parsedJsonToObject(buffer) //make sure the incoming data 
         }
 
         //setting up a general router to route the request to the handlers
