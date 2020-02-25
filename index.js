@@ -7,7 +7,6 @@ const http = require('http');
 const https = require('https')
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
-const util = require('util');
 const config = require('./config');
 const fs = require('fs');
 const handlers = require('./lib/handlers');
@@ -109,5 +108,6 @@ let unifiedServer = (req, res) => {
 
 //Define a request router
 const router = {
-    'ping': handlers.ping
+    'ping': handlers.ping,
+    'users': handlers.users
 };
