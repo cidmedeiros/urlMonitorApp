@@ -83,7 +83,7 @@ let unifiedServer = (req, res) => {
             'queryStringObject': queryStringObject,
             'method': method,
             'headers': headers,
-            'payload': tools.parsedJsonToObject(buffer) //make sure the incoming data is an Object
+            'payload': tools.parseJsonToObject(buffer) //make sure the incoming data is an Object
         }
 
         //setting up a general router to route the request to the handlers
