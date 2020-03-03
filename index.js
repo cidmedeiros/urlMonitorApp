@@ -25,7 +25,8 @@ httpServer.listen(config.httpPort, () =>{
 //Instantiate HTTPS server
 const httpsServerOptions = {
     'key': fs.readFileSync('./https/key.pem'),
-    'cert': fs.readFileSync('./https/cert.pem')
+    'cert': fs.readFileSync('./https/cert.pem'),
+    passphrase: 'somethingidontknow'
 };
 
 const httpsServer = https.createServer(httpsServerOptions,(req, res) => {
