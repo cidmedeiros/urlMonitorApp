@@ -11,7 +11,8 @@ environments.staging = {
     'httpPort': 3000,
     'httpsPort': 3001,
     'envName' : 'staging',
-    'hashingSecret': 'aVeryWeirdCreatureHere'
+    'hashingSecret': 'aVeryWeirdCreatureHere',
+    'maxChecks' : 5
 }
 
 //define the production enviroment
@@ -19,7 +20,8 @@ environments.production = {
     'httpPort': 5000,
     'httpsPort': 5001,
     'envName' : 'production',
-    'hashingSecret': 'anotherVeryWeirdCreatureHere'
+    'hashingSecret': 'anotherVeryWeirdCreatureHere',
+    'maxChecks' : 5
 }
 
 //Determine which environment was passed as a command-line argument
