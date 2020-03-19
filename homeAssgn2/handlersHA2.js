@@ -2,10 +2,10 @@
 Hub for all the handlers
  */
 
- //Dependencies
- const schreiber = require('./schreiber');
- const tolls = require('./tools');
- const config = require('./config');
+//Dependencies
+const schreiber = require('./schreiber');
+const tolls = require('./tools');
+const config = require('./config');
 //Define the handlers
 var handlers = {};
 
@@ -231,3 +231,17 @@ handlers._users.delete = (data, callback) => {
         callback(404, {'Error':'Missing or invalid required field!'});
     }
 };
+
+//Ping Handler
+handlers.ping = (data, callback) => {
+    //route to inform the requestee that the app is alive
+    callback(200);
+};
+
+//Not found handler
+handlers.notFound = (data, callback) => {
+    callback(404);
+}
+
+//Export handlers
+module.exports = handlers;
