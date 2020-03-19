@@ -43,3 +43,5 @@ tools.createRandomString = (strLength) => {
         return false;
     }
 };
+
+module.exports = tools;

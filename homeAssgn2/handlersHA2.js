@@ -232,6 +232,170 @@ handlers._users.delete = (data, callback) => {
     }
 };
 
+//Tokens
+handlers.tokens = (data, callback) => {
+    const acceptableMethods = ['get','post','put','delete'];
+    if(acceptableMethods.indexOf(data.method) > -1){
+        handlers._tokens[data.method](data, callback);
+    } else{
+        callback(405);
+    }
+};
+
+//SubContainer for handler.tokens subMethods
+handlers._tokens = {};
+
+//Define tokens post submethod
+handlers._tokens.post = (data, callback) => {
+    /* Required Data: phone, password
+       Optional Data: none
+       Data must come in as a json parsed object */
+    //check if all required data are filled out
+    const phone = typeof(data.payload.phone) == 'string' && data.payload.phone.trim().length == 10 ? data.payload.phone.trim() : false;
+    const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
+
+    if(phone && password){
+        //Lookup the user who matches that phone number 
+        schreiber.read('users', phone, (err, userData) => {
+            if(!err && userData){
+                //Hash the sent password and compare it with stored one
+                var hashedPass = tools.hash(password);
+                if(hashedPass == userData.password){
+                    let tokenId = tools.createRandomString(20); 
+                    let expires = Date.now() + 1000 * 60 * 60;
+                    let tokenObject = {
+                        'phone' : phone,
+                        'id' : tokenId,
+                        'expires': expires
+                    };
+                    //Store the token
+                    schreiber.create('tokens', tokenId, tokenObject, (err) => {
+                        if(!err || err == 200){
+                            callback(200, tokenObject);
+                        } else {
+                            callback(500, {'message':'Error creating the token!'});
+                        }
+                    })
+                } else {
+                    callback(400, {'Error':'The password did not match!'});
+                }
+            } else{
+                callback(404, {'Error':'Could not find the specified user'});
+            }
+        });
+    } else {
+        callback(400, {'Error':'Missing required field(s)'});
+    }
+};
+
+//Define tokens get submethod
+handlers._tokens.get = (data, callback) => {
+    /* Required data: id
+       optional data: none
+     */
+    //check valid id
+    const id = typeof(data.queryStringObject.id) == 'string' ? data.queryStringObject.id.trim() : false;
+
+    if(id){
+        schreiber.read('tokens', id, (err, tokenData) => {
+            if(!err && tokenData){
+                callback(200, tokenData);
+            } else {
+                callback(404);
+            }
+        });
+    } else {
+        callback(400, 'Missing or invalid required field!');
+    }
+};
+
+//Define tokens put submethod
+handlers._tokens.put = (data, callback) => {  
+    /* Required data: id, extend
+       optional data: none
+       @TODO: only let authenticaded users update their own object. Don't let them update anyone else's.
+     */
+    //check valid fields
+    console.log(data.payload);
+    console.log(data.payload.id);
+    console.log(data.payload.extend);
+
+    const id = typeof(data.payload.id) == 'string' ? data.payload.id.trim() : false;
+    const extend = typeof(data.payload.extend) == 'boolean' && data.payload.extend == true ? true : false;
+
+    if(id && extend){
+        //Lookup the token
+        schreiber.read('tokens',id, (err, tokenData) => {
+            if(!err && tokenData){
+                //check to if token isn't already expired
+                if(tokenData.expires > Date.now()){
+                    tokenData.expires = Date.now() + 1000 * 60 * 60;
+                    //Store the new updates
+                    schreiber.update('tokens', id, tokenData, (err) =>{
+                        if(!err || err == 200){
+                            callback(200, tokenData);
+                        } else {
+                            callback(500, err);
+                        }
+                    });
+                } else {
+                    callback(400, {'Error':'Token expired and could not be updated!'})
+                }
+            } else {
+                callback(500, {'Error':'Could not retrieve tokenData'});
+            }
+        });
+    } else {
+        callback(400, {'Error': 'Missing required fields or field(s) are invalid'});
+    }
+};
+
+//Define users delete submethod
+handlers._tokens.delete = (data, callback) => {
+    /* Required data: id
+       optional data: none
+       @TODO: only let authenticaded user delete their own object. Don't let them access anyone else's.
+     */
+    //check valid id
+    const id = typeof(data.queryStringObject.id) == 'string'? data.queryStringObject.id.trim() : false;
+
+    if(id){
+        schreiber.read('tokens', id, (err, data) => {
+            if(!err && data){
+                //Do not provide the hashed password to the wild
+                schreiber.delete('tokens', id, (err) => {
+                    if(!err || err == 200){
+                        callback(200, {'Message':'Token Deleted!'});
+                    } else{
+                        callback(500, {'Error': 'Could not delete token!'})        
+                    }
+                })
+            } else {
+                callback(404, {'Error': 'Could not find the specified token!'});
+            }
+        });
+    } else {
+        callback(404, {'Error':'Missing or invalid required field!'});
+    }
+};
+
+//Verify if a given token id is currently valid
+handlers._tokens.verifyToken = (id, phone, callback) => {
+    //lookup the token
+    schreiber.read('tokens', id, (err, tokenData) => {
+        if(!err && tokenData){
+            //check that token is for the given user and has not expired
+            if(tokenData.phone == phone && tokenData.expires > Date.now()){
+                callback(true);
+            } else {
+                callback(false);
+            }
+        } else {
+            callback(404, {'Error': 'Could not find the specified token!'});
+        }
+    });
+};
+
 //Ping Handler
 handlers.ping = (data, callback) => {
     //route to inform the requestee that the app is alive
