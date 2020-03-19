@@ -6,8 +6,8 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const config = require('./configHA2');
 const fs = require('fs');
-const handlers = require('./handlers');
-const tools = require('./tools');
+const handlers = require('./handlersHA2');
+const tools = require('./toolsHA2');
 const path = require('path');
 const util = require('util');
 const debug = util.debuglog('server'); //to monitor the server module -> NODE_DEBUG=server node index.js
