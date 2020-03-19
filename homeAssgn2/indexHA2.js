@@ -16,7 +16,7 @@
 *Main API File
 */
 //Dependencies
-const server = require('./lib/server');
+const server = require('./server');
 
 //Declare the app
 
