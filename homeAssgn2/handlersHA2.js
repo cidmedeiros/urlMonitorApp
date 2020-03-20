@@ -24,19 +24,20 @@ handlers._users = {};
 
 //Define users post submethod
 handlers._users.post = (data, callback) => {
-    /* Required Data: firstName, lastName, phone, password, tosAgreement
+    /* Required Data: firstName, lastName, email, password, tosAgreement
        Optional Data: none
        Data must come in as a json parsed object */
     //check if all required data are filled out
     const firstName = typeof(data.payload.firstName) == 'string' && data.payload.firstName.trim().length > 0 ? data.payload.firstName.trim() : false;
     const lastName = typeof(data.payload.lastName) == 'string' && data.payload.lastName.trim().length > 0 ? data.payload.lastName.trim() : false;
-    const phone = typeof(data.payload.phone) == 'string' && data.payload.phone.trim().length == 10 ? data.payload.phone.trim() : false;
+    const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
+    const streetAddress = typeof(data.payload.streetAddress) == 'string' && data.payload.streetAddress.trim().length > 0 ? data.payload.streetAddress.trim() : false;
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
     const tosAgreement = typeof(data.payload.tosAgreement) == 'boolean' && data.payload.tosAgreement == true ? true : false;
 
-    if(firstName && lastName && phone && password && tosAgreement){
+    if(firstName && lastName && streetAddress && email && password && tosAgreement){
         //Make sure the user doesn't already exists
-        schreiber.read('users', phone, (err, data) => {
+        schreiber.read('users', email, (err, data) => {
             if(err){
                 //Hash the users password
                 const hashedPass = tools.hash(password);
@@ -45,12 +46,14 @@ handlers._users.post = (data, callback) => {
                     let UserObjct = {
                         'firstName' : firstName,
                         'lastName' : lastName,
-                        'phone': phone,
+                        'email': email,
+                        'streetAddress': streetAddress,
                         'password' : hashedPass,
                         'tosAgreement': true
                     }
+                    console.log(UserObjct);
                     //Save User file
-                    schreiber.create('users', phone, UserObjct, (err) => {
+                    schreiber.create('users', email, UserObjct, (err) => {
                         if(!err || err == 200){
                             callback(200);
                         } else {
@@ -61,30 +64,31 @@ handlers._users.post = (data, callback) => {
                     callback(500, {'Error':'Could not hash the use\'s password!'})
                 }
             } else {
-                callback(400, {'Error': 'A user with that phone number already exists.'})
+                callback(400, {'Error': 'A user with that email already exists.'});
+                console.log({'Error': 'A user with that email already exists.'});
             }
         });
     } else {
-        callback(400, {'Error':'Missing required information'});
+        callback(400, 'Missing required information');
     }
 };
 
 //Define users get submethod
 handlers._users.get = (data, callback) => {
-    /* Required data: phone
+    /* Required data: email
        optional data: none
      */
-    //check valid phone
-    const phone = typeof(data.queryStringObject.phone) == 'string' && data.queryStringObject.phone.trim().length == 10 ? data.queryStringObject.phone.trim() : false;
+    //check valid email
+    const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
 
-    if(phone){
+    if(email){
         //Get the token from the headers
         const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
         //Verify if a given token id is currently valid
         if(token){
-            handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+            handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
                 if(tokenIsValid){
-                    schreiber.read('users', phone, (err, Userdata) => {
+                    schreiber.read('users', email, (err, Userdata) => {
                         if(!err && Userdata){
                             //Do not provide the hashed password to the wild
                             delete Userdata.password;
@@ -101,34 +105,35 @@ handlers._users.get = (data, callback) => {
             callback(403, {'Error': 'Missing token in header, or token is invalid!'});
         }
     } else {
-        callback(400, 'Missing or invalid required field!');
+        callback(400, {'Error':'Missing or invalid required field!'});
     }
 };
 
 //Define users put submethod
 handlers._users.put = (data, callback) => {
-    /* Required data: phone && at least one optional data
-    optional data: firstName, lastName, password (at least one must be specified)
+    /* Required data: email && at least one optional data
+    optional data: firstName, lastName, streetAddress, password (at least one must be specified)
     */
 
-    //Check valid phone
-    const phone = typeof(data.payload.phone) == 'string' && data.payload.phone.trim().length == 10 ? data.payload.phone.trim() : false;
+    //Check valid email
+    const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
 
     // Check for the optional & password fields
     const firstName = typeof(data.payload.firstName) == 'string' && data.payload.firstName.trim().length > 0 ? data.payload.firstName.trim() : false;
     const lastName = typeof(data.payload.lastName) == 'string' && data.payload.lastName.trim().length > 0 ? data.payload.lastName.trim() : false;
+    const streetAddress = typeof(data.payload.streetAddress) == 'string' && data.payload.streetAddress.trim().length > 0 ? data.payload.streetAddress.trim() : false;
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
 
-    if(phone){
+    if(email){
         //Error if nothing is sent to update
-        if(firstName || lastName || password){
+        if(firstName || lastName || streetAddress || password){
             //Get the token from the headers
             const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
             if(token){
                 //Verify if a given token id is currently valid
-                handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+                handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
                     if(tokenIsValid){
-                        schreiber.read('users', phone, (err, userData) => {
+                        schreiber.read('users', email, (err, userData) => {
                             if(!err && userData){
                                 //Update fields necessary
                                 if(firstName){
@@ -137,11 +142,14 @@ handlers._users.put = (data, callback) => {
                                 if(lastName){
                                     userData.lastName = lastName;
                                 }
+                                if(streetAddress){
+                                    userData.streetAddress = streetAddress;
+                                }
                                 if(password){
                                     userData.password = tools.hash(password);
                                 }
                                 //Store the new updates
-                                schreiber.update('users', phone, userData, (err) =>{
+                                schreiber.update('users', email, userData, (err) =>{
                                     if(!err || err == 200){
                                         callback(200, {'Message': 'update successful!'});
                                     } else {
@@ -163,48 +171,48 @@ handlers._users.put = (data, callback) => {
             callback(400, {'Error':'Missing some required fields to update'})
         }
     } else {
-        callback(400, {'Error':'The provided phone number is invalid!'})
+        callback(400, {'Error':'The provided email is invalid!'})
     }
 };
 
 //Define users delete submethod
 handlers._users.delete = (data, callback) => {
-    /* Required data: phone
+    /* Required data: email
        optional data: none
      */
     //check valid phone
-    const phone = typeof(data.queryStringObject.phone) == 'string' && data.queryStringObject.phone.trim().length == 10 ? data.queryStringObject.phone.trim() : false;
+    const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
 
-    if(phone){
+    if(email){
         //Get the token from the headers
         const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
         if(token){
             //Verify if a given token id is currently valid
-            handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+            handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
                 if(tokenIsValid){
-                    schreiber.read('users', phone, (err, userData) => {
+                    schreiber.read('users', email, (err, userData) => {
                         if(!err && userData){
-                            schreiber.delete('users', phone, (err) => {
+                            schreiber.delete('users', email, (err) => {
                                 if(!err || err == 200){
                                     //delete all data associated to the user
-                                    //verify user's checks
-                                    let userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [];
-                                    let checksToDelete = userChecks.length;
-                                    if(checksToDelete > 0){
-                                        let checksDeleted = 0;
+                                    //verify user's orders
+                                    let userOrders = typeof(userData.orders) == 'object' && userData.orders instanceof Array ? userData.orders : [];
+                                    let ordersToDelete = userOrders.length;
+                                    if(ordersToDelete > 0){
+                                        let ordersDeleted = 0;
                                         let deletionsError = false;
                                         //loop through the checks
-                                        userChecks.forEach(checkId => {
-                                            schreiber.delete('checks', checkId, (err) =>{
+                                        userOrders.forEach(orderId => {
+                                            schreiber.delete('orders', orderId, (err) =>{
                                                 if(err && err != 200){
                                                     deletionsError = true;
                                                 }
-                                                checksDeleted++;
-                                                if(checksToDelete == checksDeleted){
+                                                ordersDeleted++;
+                                                if(ordersToDelete == ordersDeleted){
                                                     if(!deletionsError){
                                                         callback(200);
                                                     } else {
-                                                        callback(500, {'Error': 'One or more of the user\'s check could not be deleted. Some of them might not exist already.'});
+                                                        callback(500, {'Error': 'One or more of the user\'s orders could not be deleted. Some of them might not exist already.'});
                                                     }
                                                 }
                                             });
@@ -247,16 +255,16 @@ handlers._tokens = {};
 
 //Define tokens post submethod
 handlers._tokens.post = (data, callback) => {
-    /* Required Data: phone, password
+    /* Required Data: email, password
        Optional Data: none
        Data must come in as a json parsed object */
     //check if all required data are filled out
-    const phone = typeof(data.payload.phone) == 'string' && data.payload.phone.trim().length == 10 ? data.payload.phone.trim() : false;
+    const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
 
-    if(phone && password){
-        //Lookup the user who matches that phone number 
-        schreiber.read('users', phone, (err, userData) => {
+    if(email && password){
+        //Lookup the user who matches that email number 
+        schreiber.read('users', email, (err, userData) => {
             if(!err && userData){
                 //Hash the sent password and compare it with stored one
                 var hashedPass = tools.hash(password);
@@ -264,7 +272,7 @@ handlers._tokens.post = (data, callback) => {
                     let tokenId = tools.createRandomString(20); 
                     let expires = Date.now() + 1000 * 60 * 60;
                     let tokenObject = {
-                        'phone' : phone,
+                        'email' : email,
                         'id' : tokenId,
                         'expires': expires
                     };
