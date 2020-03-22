@@ -43,17 +43,34 @@ handlers._users.post = (data, callback) => {
                 const hashedPass = tools.hash(password);
                 //Before proceed check if hashing was successful
                 if(hashedPass){
+                    let cartId = tools.createRandomString(20);
                     let UserObjct = {
                         'firstName' : firstName,
                         'lastName' : lastName,
                         'email': email,
                         'streetAddress': streetAddress,
                         'password' : hashedPass,
-                        'tosAgreement': true
+                        'tosAgreement': true,
+                        'shoppingCart': cartId,
+                        'orders': [],
                     }
-                    console.log(UserObjct);
                     //Save User file
                     schreiber.create('users', email, UserObjct, (err) => {
+                        if(!err || err == 200){
+                            callback(200);
+                        } else {
+                            callback(500, err);
+                        }
+                    });
+                    //Create User's unique Shopping Cart
+                    cartObject = {
+                        'cartId': cartId,
+                        'user': email,
+                        'pizzas': [],
+                        'drinks': [],
+                        'desserts': []
+                    }
+                    schreiber.create('shoppingCarts', cartId, cartObject, (err) => {
                         if(!err || err == 200){
                             callback(200);
                         } else {
@@ -195,31 +212,43 @@ handlers._users.delete = (data, callback) => {
                             schreiber.delete('users', email, (err) => {
                                 if(!err || err == 200){
                                     //delete all data associated to the user
-                                    //verify user's orders
-                                    let userOrders = typeof(userData.orders) == 'object' && userData.orders instanceof Array ? userData.orders : [];
-                                    let ordersToDelete = userOrders.length;
-                                    if(ordersToDelete > 0){
-                                        let ordersDeleted = 0;
-                                        let deletionsError = false;
-                                        //loop through the checks
-                                        userOrders.forEach(orderId => {
-                                            schreiber.delete('orders', orderId, (err) =>{
-                                                if(err && err != 200){
-                                                    deletionsError = true;
+                                    //delete user's shoppingcart
+                                    let shoppingcart = typeof(userData.shoppingCart) == 'string' && userData.shoppingCart.length > 0 ? userData.shoppingCart : false;
+                                    if(shoppingcart){
+                                        schreiber.delete('shoppingCarts', shoppingcart, (err) =>{
+                                            if(!err || err == 200){
+                                                //verify user's orders
+                                                let userOrders = typeof(userData.orders) == 'object' && userData.orders instanceof Array ? userData.orders : [];
+                                                let ordersToDelete = userOrders.length;
+                                                if(ordersToDelete > 0){
+                                                    let ordersDeleted = 0;
+                                                    let deletionsError = false;
+                                                    //loop through the orders
+                                                    userOrders.forEach(orderId => {
+                                                        schreiber.delete('orders', orderId, (err) =>{
+                                                            if(err && err != 200){
+                                                                deletionsError = true;
+                                                            }
+                                                            ordersDeleted++;
+                                                            if(ordersToDelete == ordersDeleted){
+                                                                if(!deletionsError){
+                                                                    callback(200);
+                                                                } else {
+                                                                    callback(500, {'Error': 'One or more of the user\'s orders could not be deleted. Some of them might not exist already.'});
+                                                                }
+                                                            }
+                                                        });
+                                                    });
+                                                } else {
+                                                    callback(200);
                                                 }
-                                                ordersDeleted++;
-                                                if(ordersToDelete == ordersDeleted){
-                                                    if(!deletionsError){
-                                                        callback(200);
-                                                    } else {
-                                                        callback(500, {'Error': 'One or more of the user\'s orders could not be deleted. Some of them might not exist already.'});
-                                                    }
+                                            } else {
+                                                    callback(500, {'Error': 'Could not delete user\'s shopping cart and orders. They might not exist already.'});
                                                 }
                                             });
-                                        });
-                                    } else {
-                                        callback(200);
-                                    }
+                                        } else {
+                                            callback(500, {'Error': 'Could not delete user\'s related data!'});
+                                        }
                                 } else{
                                     callback(500, {'Error': 'Could not delete user!'});
                                 }
@@ -299,8 +328,7 @@ handlers._tokens.post = (data, callback) => {
 //Define tokens get submethod
 handlers._tokens.get = (data, callback) => {
     /* Required data: id
-       optional data: none
-     */
+       optional data: none */
     //check valid id
     const id = typeof(data.queryStringObject.id) == 'string' ? data.queryStringObject.id.trim() : false;
 
@@ -324,10 +352,6 @@ handlers._tokens.put = (data, callback) => {
        @TODO: only let authenticaded users update their own object. Don't let them update anyone else's.
      */
     //check valid fields
-    console.log(data.payload);
-    console.log(data.payload.id);
-    console.log(data.payload.extend);
-
     const id = typeof(data.payload.id) == 'string' ? data.payload.id.trim() : false;
     const extend = typeof(data.payload.extend) == 'boolean' && data.payload.extend == true ? true : false;
 
@@ -347,7 +371,8 @@ handlers._tokens.put = (data, callback) => {
                         }
                     });
                 } else {
-                    callback(400, {'Error':'Token expired and could not be updated!'})
+                    callback(400, {'Error':'Token expired and could not be updated!'});
+                    console.log('expired!')
                 }
             } else {
                 callback(500, {'Error':'Could not retrieve tokenData'});
@@ -388,12 +413,12 @@ handlers._tokens.delete = (data, callback) => {
 };
 
 //Verify if a given token id is currently valid
-handlers._tokens.verifyToken = (id, phone, callback) => {
+handlers._tokens.verifyToken = (token, email, callback) => {
     //lookup the token
-    schreiber.read('tokens', id, (err, tokenData) => {
+    schreiber.read('tokens', token, (err, tokenData) => {
         if(!err && tokenData){
             //check that token is for the given user and has not expired
-            if(tokenData.phone == phone && tokenData.expires > Date.now()){
+            if(tokenData.email == email && tokenData.expires > Date.now()){
                 callback(true);
             } else {
                 callback(false);
@@ -403,6 +428,64 @@ handlers._tokens.verifyToken = (id, phone, callback) => {
         }
     });
 };
+
+//Orders
+handlers.shoppingCart = (data, callback) => {
+    const acceptableMethods = ['get','post','put','delete'];
+    if(acceptableMethods.indexOf(data.method) > -1){
+        handlers._shoppingCart[data.method](data, callback);
+    } else{
+        callback(405);
+    }
+};
+
+//SubContainer for handler.tokens subMethods
+handlers._shoppingCart = {};
+
+//Define tokens post submethod
+handlers._orders.post = (data, callback) => {
+    /* Required Data: pizzas, drinks, dessert, complementaryInfo
+       Optional Data: none
+       The required variables are all arrays except to the complementaryInfo;
+       The complementaryInfo is an object where the key values relate to the variables;
+       Data must come in as a json parsed object */
+    //check if all required data are filled out
+    const pizzas = typeof(data.payload.pizzas) == 'object' && data.payload.pizzas.length > 0 ? data.payload.pizzas : false;
+    const drinks = typeof(data.payload.drinks) == 'object' && data.payload.drinks.length > 0 ? data.payload.drinks : false;
+    const dessert = typeof(data.payload.dessert) == 'object' && data.payload.dessert.length > 0 ? data.payload.dessert : false;
+    const complementaryInfo = typeof(data.payload.complementaryInfo) == 'object' && data.payload.complementaryInfo.length > 0 ? data.payload.complementaryInfo : false;
+
+    if(pizzas && drinks && dessert && complementaryInfo){
+        //Get token from the headers
+        let token = typeof(data.headers.token) == 'string' && data.headers.token.length == 20 ? data.headers.token : false;
+        schreiber.read('tokens', token, (err, tokenData) => {
+            let email = tokenData.email
+            handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
+                if(tokenIsValid){
+                    let order = tools.createRandomString(20);
+                    let orderData = {
+                        'pizzas': pizzas,
+                        'drinks': drinks,
+                        'dessert': dessert,
+                        complementaryInfo : {
+                            'pizzas': complementaryInfo.pizzas,
+                            'drinks': complementaryInfo.drinks,
+                            'dessert': complementaryInfo.dessert
+                        }
+                    }
+                    schreiber.create('orders', order, orderData, (err, data) => {
+                        if(!err )
+                    });
+                } else {
+                    callback(403);
+                }
+            });
+        });
+    } else {
+        callback(400, {'Error':'Missing required inputs, or inputs are invalid!'});
+    }
+};
+
 
 //Ping Handler
 handlers.ping = (data, callback) => {
