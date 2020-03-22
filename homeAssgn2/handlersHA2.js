@@ -383,7 +383,7 @@ handlers._tokens.put = (data, callback) => {
     }
 };
 
-//Define users delete submethod
+//Define tokens delete submethod
 handlers._tokens.delete = (data, callback) => {
     /* Required data: id
        optional data: none
@@ -419,7 +419,7 @@ handlers._tokens.verifyToken = (token, email, callback) => {
         if(!err && tokenData){
             //check that token is for the given user and has not expired
             if(tokenData.email == email && tokenData.expires > Date.now()){
-                callback(true);
+                callback(true, tokenData);
             } else {
                 callback(false);
             }
@@ -431,7 +431,7 @@ handlers._tokens.verifyToken = (token, email, callback) => {
 
 //Orders
 handlers.shoppingCart = (data, callback) => {
-    const acceptableMethods = ['get','post','put','delete'];
+    const acceptableMethods = ['get','post','put'];
     if(acceptableMethods.indexOf(data.method) > -1){
         handlers._shoppingCart[data.method](data, callback);
     } else{
@@ -439,54 +439,95 @@ handlers.shoppingCart = (data, callback) => {
     }
 };
 
-//SubContainer for handler.tokens subMethods
+//SubContainer for handler.shoppingCart subMethods
 handlers._shoppingCart = {};
 
-//Define tokens post submethod
-handlers._orders.post = (data, callback) => {
-    /* Required Data: pizzas, drinks, dessert, complementaryInfo
+//Define shoppingCart post submethod
+handlers._shoppingCart.post = (data, callback) => {
+    /* Required Data: at least one variable from the menu (pizzas, drinks, desserts)
        Optional Data: none
-       The required variables are all arrays except to the complementaryInfo;
-       The complementaryInfo is an object where the key values relate to the variables;
        Data must come in as a json parsed object */
-    //check if all required data are filled out
-    const pizzas = typeof(data.payload.pizzas) == 'object' && data.payload.pizzas.length > 0 ? data.payload.pizzas : false;
-    const drinks = typeof(data.payload.drinks) == 'object' && data.payload.drinks.length > 0 ? data.payload.drinks : false;
-    const dessert = typeof(data.payload.dessert) == 'object' && data.payload.dessert.length > 0 ? data.payload.dessert : false;
-    const complementaryInfo = typeof(data.payload.complementaryInfo) == 'object' && data.payload.complementaryInfo.length > 0 ? data.payload.complementaryInfo : false;
+    //check the provided data if filled out
+    const pizza = typeof(data.payload.pizza) == 'object' && Object.keys(data.payload.pizza).length > 0 ? data.payload.pizza : false;
+    const drink = typeof(data.payload.drink) == 'object' && Object.keys(data.payload.drink).length > 0 ? data.payload.drink : false;
+    const dessert = typeof(data.payload.dessert) == 'object' && Object.keys(data.payload.dessert).length > 0 ? data.payload.dessert : false;
 
-    if(pizzas && drinks && dessert && complementaryInfo){
-        //Get token from the headers
-        let token = typeof(data.headers.token) == 'string' && data.headers.token.length == 20 ? data.headers.token : false;
-        schreiber.read('tokens', token, (err, tokenData) => {
-            let email = tokenData.email
-            handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
-                if(tokenIsValid){
-                    let order = tools.createRandomString(20);
-                    let orderData = {
-                        'pizzas': pizzas,
-                        'drinks': drinks,
-                        'dessert': dessert,
-                        complementaryInfo : {
-                            'pizzas': complementaryInfo.pizzas,
-                            'drinks': complementaryInfo.drinks,
-                            'dessert': complementaryInfo.dessert
-                        }
+    schreiber.read('tokens', token, (err, tokenData) => {
+        let email = tokenData.email
+        //Verify authentication
+        handlers._tokens.verifyToken(token, email, (tokenIsValid, tokenData) => {
+            if(tokenIsValid){
+                //if authenticated get users data
+                schreiber.read('users', tokenData.email, (err, userData) => {
+                    if(!err){
+                        //get user's Shopping Cart
+                        schreiber.read('shoppingCarts', userData.shoppingCart, (err, cartData) => {
+                            if(!err){
+                                if(pizza){
+                                    cartData.pizzas.push(pizza);
+                                }
+                                if(drink){
+                                    cartData.drinks.push(drink);
+                                }
+                                if(dessert){
+                                    cartData.desserts.push(dessert);
+                                }
+                            schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
+                                if(err == 200){
+                                    callback(200);
+                                } else {
+                                    callback(500, {'Error':'Could not add item(s) to the cart!'});
+                                }
+                            });
+                            } else {
+                                callback(500, {'Error':'Could not find the user\'s Shopping Cart!'});
+                            }
+                        });
+                    } else {
+                        callback(500, {'Error':'Could not find the user!'});
                     }
-                    schreiber.create('orders', order, orderData, (err, data) => {
-                        if(!err )
-                    });
-                } else {
-                    callback(403);
-                }
-            });
+                });
+            } else {
+                callback(403);
+            }
         });
-    } else {
-        callback(400, {'Error':'Missing required inputs, or inputs are invalid!'});
-    }
+    });
 };
 
+//Define shoppingCart get submethod
+handlers._shoppingCart.get = (data, callback) => {
+    /* Required data: cartId
+       optional data: none
+     */
+    //check valid shoppingCart
+    const cartId = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.trim().length == 20 ? data.queryStringObject.id.trim() : false;
 
+    if(cartId){
+        schreiber.read('shoppingCarts', cartId, (err, cartData) => {
+            if(!err){
+                let email = cartData.email;
+                 //Get the token from the headers
+                const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+                //Verify if a given token id is currently valid
+                if(token){
+                    handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
+                        if(tokenIsValid){
+                            callback(cartData);
+                        } else {
+                            callback(403, {'Error': 'Either the user does not exist, or the token is/has invalid/expired!'});
+                        }
+                    });
+                } else {
+                    callback(403, {'Error': 'Missing token in header, or token is invalid!'});
+                }
+            } else {
+                callback(400, {'Error':'Shopping cart doesn\'t exist!'})
+            }
+        });
+    } else {
+        callback(400, {'Error':'Missing or invalid required field!'});
+    }
+};
 //Ping Handler
 handlers.ping = (data, callback) => {
     //route to inform the requestee that the app is alive
