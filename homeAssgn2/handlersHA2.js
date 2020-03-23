@@ -33,7 +33,14 @@ handlers._users.post = (data, callback) => {
     const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
     const streetAddress = typeof(data.payload.streetAddress) == 'string' && data.payload.streetAddress.trim().length > 0 ? data.payload.streetAddress.trim() : false;
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
-    const tosAgreement = typeof(data.payload.tosAgreement) == 'boolean' && data.payload.tosAgreement == true ? true : false;
+    const tosAgreement = typeof(data.payload.tosAgreement) == 'boolean' && data.payload.tosAgreement == true ? data.payload.tosAgreement : false;
+
+    console.log(firstName);
+    console.log(lastName);
+    console.log(streetAddress);
+    console.log(email);
+    console.log(password);
+    console.log(tosAgreement);
 
     if(firstName && lastName && streetAddress && email && password && tosAgreement){
         //Make sure the user doesn't already exists
@@ -57,32 +64,30 @@ handlers._users.post = (data, callback) => {
                     //Save User file
                     schreiber.create('users', email, UserObjct, (err) => {
                         if(!err || err == 200){
-                            callback(200);
-                        } else {
-                            callback(500, err);
-                        }
-                    });
-                    //Create User's unique Shopping Cart
-                    cartObject = {
-                        'cartId': cartId,
-                        'user': email,
-                        'pizzas': [],
-                        'drinks': [],
-                        'desserts': []
-                    }
-                    schreiber.create('shoppingCarts', cartId, cartObject, (err) => {
-                        if(!err || err == 200){
-                            callback(200);
+                            //Create User's unique Shopping Cart
+                            cartObject = {
+                                'cartId': cartId,
+                                'user': email,
+                                'pizzas': [],
+                                'drinks': [],
+                                'desserts': []
+                            }
+                            schreiber.create('shoppingCarts', cartId, cartObject, (err) => {
+                                if(!err || err == 200){
+                                    callback(200);
+                                } else {
+                                    callback(500, err);
+                                }
+                            });
                         } else {
                             callback(500, err);
                         }
                     });
                 } else {
-                    callback(500, {'Error':'Could not hash the use\'s password!'})
+                    callback(500, {'Error':'Could not hash the use\'s password!'});
                 }
             } else {
                 callback(400, {'Error': 'A user with that email already exists.'});
-                console.log({'Error': 'A user with that email already exists.'});
             }
         });
     } else {
@@ -430,20 +435,20 @@ handlers._tokens.verifyToken = (token, email, callback) => {
 };
 
 //Orders
-handlers.shoppingCart = (data, callback) => {
+handlers.shoppingcarts = (data, callback) => {
     const acceptableMethods = ['get','post','put'];
     if(acceptableMethods.indexOf(data.method) > -1){
-        handlers._shoppingCart[data.method](data, callback);
+        handlers._shoppingcarts[data.method](data, callback);
     } else{
         callback(405);
     }
 };
 
 //SubContainer for handler.shoppingCart subMethods
-handlers._shoppingCart = {};
+handlers._shoppingcarts = {};
 
 //Define shoppingCart post submethod
-handlers._shoppingCart.post = (data, callback) => {
+handlers._shoppingcarts.post = (data, callback) => {
     /* Required Data: at least one variable from the menu (pizzas, drinks, desserts)
        Optional Data: none
        Data must come in as a json parsed object */
@@ -451,6 +456,8 @@ handlers._shoppingCart.post = (data, callback) => {
     const pizza = typeof(data.payload.pizza) == 'object' && Object.keys(data.payload.pizza).length > 0 ? data.payload.pizza : false;
     const drink = typeof(data.payload.drink) == 'object' && Object.keys(data.payload.drink).length > 0 ? data.payload.drink : false;
     const dessert = typeof(data.payload.dessert) == 'object' && Object.keys(data.payload.dessert).length > 0 ? data.payload.dessert : false;
+    //Get the token from the headers
+    const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
 
     schreiber.read('tokens', token, (err, tokenData) => {
         let email = tokenData.email
@@ -495,7 +502,7 @@ handlers._shoppingCart.post = (data, callback) => {
 };
 
 //Define shoppingCart get submethod
-handlers._shoppingCart.get = (data, callback) => {
+handlers._shoppingcarts.get = (data, callback) => {
     /* Required data: cartId
        optional data: none
      */

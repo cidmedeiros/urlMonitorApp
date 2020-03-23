@@ -24,17 +24,17 @@ schreiber.create = (dir, file, data, callback) => {
                 if(!err){
                     fs.close(fileDescriptor, (err) => {
                         if(!err){
-                            callback(200, {'message':'Success writing the file!'});
+                            callback(200);
                         } else{
-                            callback(500, {'message':'Error closing the file'});
+                            callback(500);
                         }
                     });
                 } else {
-                    callback(500, {'message':'Error writing the file'});
+                    callback(500);
                 }
             });
         } else{
-            callback(500, {'message':'Could not create new file, it may already exist'});
+            callback(500, {'Could not create new file, it may already exist': err});
         }
     });
 };

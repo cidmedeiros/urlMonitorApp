@@ -78,7 +78,7 @@ server.unifiedServer = (req, res) => {
             let handlerPayloadString = JSON.stringify(handlerPayload);
 
             //Return the responses
-            res.setHeader('Content-Type', 'application/json')
+            res.setHeader('Content-Type', 'application/json');
             res.writeHead(statusCode);
             res.end(handlerPayloadString);
 
@@ -97,7 +97,8 @@ server.router = {
     'ping': handlers.ping,
     'users': handlers.users,
     'tokens' : handlers.tokens,
-    'order': handlers.order
+    'orders': handlers.order,
+    'shoppingCarts' : handlers.shoppingCarts,
 };
 
 //Define server init function
