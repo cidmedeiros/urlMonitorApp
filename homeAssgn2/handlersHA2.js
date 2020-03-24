@@ -461,12 +461,14 @@ handlers._shoppingcarts.post = (data, callback) => {
 
     schreiber.read('tokens', token, (err, tokenData) => {
         let email = tokenData.email
+        console.log(email)
         //Verify authentication
         handlers._tokens.verifyToken(token, email, (tokenIsValid, tokenData) => {
             if(tokenIsValid){
                 //if authenticated get users data
-                schreiber.read('users', tokenData.email, (err, userData) => {
+                schreiber.read('users', email, (err, userData) => {
                     if(!err){
+                        console.log(userData.shoppingCart)
                         //get user's Shopping Cart
                         schreiber.read('shoppingCarts', userData.shoppingCart, (err, cartData) => {
                             if(!err){

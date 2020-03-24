@@ -98,7 +98,7 @@ server.router = {
     'users': handlers.users,
     'tokens' : handlers.tokens,
     'orders': handlers.order,
-    'shoppingCarts' : handlers.shoppingCarts,
+    'shoppingcarts' : handlers.shoppingcarts,
 };
 
 //Define server init function
