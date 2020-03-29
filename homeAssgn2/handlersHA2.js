@@ -35,13 +35,6 @@ handlers._users.post = (data, callback) => {
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
     const tosAgreement = typeof(data.payload.tosAgreement) == 'boolean' && data.payload.tosAgreement == true ? data.payload.tosAgreement : false;
 
-    console.log(firstName);
-    console.log(lastName);
-    console.log(streetAddress);
-    console.log(email);
-    console.log(password);
-    console.log(tosAgreement);
-
     if(firstName && lastName && streetAddress && email && password && tosAgreement){
         //Make sure the user doesn't already exists
         schreiber.read('users', email, (err, data) => {
@@ -51,7 +44,7 @@ handlers._users.post = (data, callback) => {
                 //Before proceed check if hashing was successful
                 if(hashedPass){
                     let cartId = tools.createRandomString(20);
-                    let UserObjct = {
+                    let userData = {
                         'firstName' : firstName,
                         'lastName' : lastName,
                         'email': email,
@@ -62,7 +55,7 @@ handlers._users.post = (data, callback) => {
                         'orders': [],
                     }
                     //Save User file
-                    schreiber.create('users', email, UserObjct, (err) => {
+                    schreiber.create('users', email, userData, (err) => {
                         if(!err || err == 200){
                             //Create User's unique Shopping Cart
                             cartObject = {
@@ -74,6 +67,9 @@ handlers._users.post = (data, callback) => {
                             }
                             schreiber.create('shoppingCarts', cartId, cartObject, (err) => {
                                 if(!err || err == 200){
+                                    //Do not provide the hashed password to the wild
+                                    delete userData.password;
+                                    console.log(userData);
                                     callback(200);
                                 } else {
                                     callback(500, err);
@@ -101,7 +97,7 @@ handlers._users.get = (data, callback) => {
        optional data: none
      */
     //check valid email
-    const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
+    const email = typeof(data.queryStringObject.email) == 'string' && tools.validateEmail(data.queryStringObject.email.trim()) ? data.queryStringObject.email.trim() : false;
 
     if(email){
         //Get the token from the headers
@@ -110,11 +106,12 @@ handlers._users.get = (data, callback) => {
         if(token){
             handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
                 if(tokenIsValid){
-                    schreiber.read('users', email, (err, Userdata) => {
-                        if(!err && Userdata){
+                    schreiber.read('users', email, (err, userData) => {
+                        if(!err && userData){
                             //Do not provide the hashed password to the wild
-                            delete Userdata.password;
-                            callback(200, Userdata);
+                            delete userData.password;
+                            console.log(userData);
+                            callback(200, userData);
                         } else {
                             callback(404);
                         }
@@ -173,6 +170,9 @@ handlers._users.put = (data, callback) => {
                                 //Store the new updates
                                 schreiber.update('users', email, userData, (err) =>{
                                     if(!err || err == 200){
+                                        //Do not provide the hashed password to the wild
+                                        delete userData.password;
+                                        console.log(userData);
                                         callback(200, {'Message': 'update successful!'});
                                     } else {
                                         callback(500, {'Error': err});
@@ -203,7 +203,7 @@ handlers._users.delete = (data, callback) => {
        optional data: none
      */
     //check valid phone
-    const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
+    const email = typeof(data.queryStringObject.email) == 'string' && tools.validateEmail(data.queryStringObject.email.trim()) ? data.queryStringObject.email.trim() : false;
 
     if(email){
         //Get the token from the headers
@@ -313,6 +313,7 @@ handlers._tokens.post = (data, callback) => {
                     //Store the token
                     schreiber.create('tokens', tokenId, tokenObject, (err) => {
                         if(!err || err == 200){
+                            console.log(tokenObject)
                             callback(200, tokenObject);
                         } else {
                             callback(500, {'message':'Error creating the token!'});
@@ -338,13 +339,21 @@ handlers._tokens.get = (data, callback) => {
     const id = typeof(data.queryStringObject.id) == 'string' ? data.queryStringObject.id.trim() : false;
 
     if(id){
-        schreiber.read('tokens', id, (err, tokenData) => {
-            if(!err && tokenData){
-                callback(200, tokenData);
-            } else {
-                callback(404);
-            }
-        });
+        //Get the token from the headers
+        const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+        //Verify if a given token id is currently valid
+        if(token == id){
+            schreiber.read('tokens', id, (err, tokenData) => {
+                if(!err && tokenData){
+                    console.log(tokenData);
+                    callback(200, tokenData);
+                } else {
+                    callback(404);
+                }
+            });
+        } else {
+            callback(403, 'Not properly authenticated');
+        }
     } else {
         callback(400, 'Missing or invalid required field!');
     }
@@ -361,28 +370,36 @@ handlers._tokens.put = (data, callback) => {
     const extend = typeof(data.payload.extend) == 'boolean' && data.payload.extend == true ? true : false;
 
     if(id && extend){
-        //Lookup the token
-        schreiber.read('tokens',id, (err, tokenData) => {
-            if(!err && tokenData){
-                //check to if token isn't already expired
-                if(tokenData.expires > Date.now()){
-                    tokenData.expires = Date.now() + 1000 * 60 * 60;
-                    //Store the new updates
-                    schreiber.update('tokens', id, tokenData, (err) =>{
-                        if(!err || err == 200){
-                            callback(200, tokenData);
-                        } else {
-                            callback(500, err);
-                        }
-                    });
+        //Get the token from the headers
+        const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+        //Verify if a given token id is currently valid
+        if(id == token){
+            //Lookup the token
+            schreiber.read('tokens',id, (err, tokenData) => {
+                if(!err && tokenData){
+                    //check to if token isn't already expired
+                    if(tokenData.expires > Date.now()){
+                        tokenData.expires = Date.now() + 1000 * 60 * 60;
+                        //Store the new updates
+                        schreiber.update('tokens', id, tokenData, (err) =>{
+                            if(!err || err == 200){
+                                console.log(tokenData);
+                                callback(200, tokenData);
+                            } else {
+                                callback(500, err);
+                            }
+                        });
+                    } else {
+                        callback(400, {'Error':'Token expired and could not be updated!'});
+                        console.log('expired!')
+                    }
                 } else {
-                    callback(400, {'Error':'Token expired and could not be updated!'});
-                    console.log('expired!')
+                    callback(500, {'Error':'Could not retrieve tokenData'});
                 }
-            } else {
-                callback(500, {'Error':'Could not retrieve tokenData'});
-            }
-        });
+            });
+        } else {
+            callback(403, 'Not properly authenticated');
+        }
     } else {
         callback(400, {'Error': 'Missing required fields or field(s) are invalid'});
     }
@@ -398,20 +415,28 @@ handlers._tokens.delete = (data, callback) => {
     const id = typeof(data.queryStringObject.id) == 'string'? data.queryStringObject.id.trim() : false;
 
     if(id){
-        schreiber.read('tokens', id, (err, data) => {
-            if(!err && data){
-                //Do not provide the hashed password to the wild
-                schreiber.delete('tokens', id, (err) => {
-                    if(!err || err == 200){
-                        callback(200, {'Message':'Token Deleted!'});
-                    } else{
-                        callback(500, {'Error': 'Could not delete token!'})        
-                    }
-                })
-            } else {
-                callback(404, {'Error': 'Could not find the specified token!'});
-            }
-        });
+        //Get the token from the headers
+        const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+        //Verify if a given token id is currently valid
+        if(id == token){
+            schreiber.read('tokens', id, (err, data) => {
+                if(!err && data){
+                    //Do not provide the hashed password to the wild
+                    schreiber.delete('tokens', id, (err) => {
+                        if(!err || err == 200){
+                            console.log({'Message':'Token Deleted!'});
+                            callback(200, {'Message':'Token Deleted!'});
+                        } else{
+                            callback(500, {'Error': 'Could not delete token!'});        
+                        }
+                    });
+                } else {
+                    callback(404, {'Error': 'Could not find the specified token!'});
+                }
+            });
+        } else {
+            callback(403, {'Message':'Not properly authenticated'});
+        }
     } else {
         callback(404, {'Error':'Missing or invalid required field!'});
     }
@@ -429,12 +454,12 @@ handlers._tokens.verifyToken = (token, email, callback) => {
                 callback(false);
             }
         } else {
-            callback(404, {'Error': 'Could not find the specified token!'});
+            callback(false, {'Error': 'Could not find the specified token!'});
         }
     });
 };
 
-//Orders
+//ShoppingCart
 handlers.shoppingcarts = (data, callback) => {
     const acceptableMethods = ['get','post','put'];
     if(acceptableMethods.indexOf(data.method) > -1){
