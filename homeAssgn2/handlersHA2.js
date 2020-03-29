@@ -102,9 +102,9 @@ handlers._users.get = (data, callback) => {
     if(email){
         //Get the token from the headers
         const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
-        //Verify if a given token id is currently valid
         if(token){
-            handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
+            //Verify if a given token belongs to current user in session and has not expired
+            handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
                 if(tokenIsValid){
                     schreiber.read('users', email, (err, userData) => {
                         if(!err && userData){
@@ -149,8 +149,8 @@ handlers._users.put = (data, callback) => {
             //Get the token from the headers
             const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
             if(token){
-                //Verify if a given token id is currently valid
-                handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
+                //Verify if a given token belongs to current user in session and has not expired
+                handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
                     if(tokenIsValid){
                         schreiber.read('users', email, (err, userData) => {
                             if(!err && userData){
@@ -209,8 +209,8 @@ handlers._users.delete = (data, callback) => {
         //Get the token from the headers
         const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
         if(token){
-            //Verify if a given token id is currently valid
-            handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
+            //Verify if a given token belongs to current user in session and has not expired
+            handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
                 if(tokenIsValid){
                     schreiber.read('users', email, (err, userData) => {
                         if(!err && userData){
@@ -341,14 +341,21 @@ handlers._tokens.get = (data, callback) => {
     if(id){
         //Get the token from the headers
         const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
-        //Verify if a given token id is currently valid
+        //Verify if a given token id is the same of the current authenticated session
         if(token == id){
-            schreiber.read('tokens', id, (err, tokenData) => {
-                if(!err && tokenData){
-                    console.log(tokenData);
-                    callback(200, tokenData);
+            //Verify if the token hasn't expired
+            handlers._tokens.verifyExpiredToken(token, (isTokenValid) => {
+                if(isTokenValid){
+                    schreiber.read('tokens', id, (err, tokenData) => {
+                        if(!err && tokenData){
+                            console.log(tokenData);
+                            callback(200, tokenData);
+                        } else {
+                            callback(404);
+                        }
+                    });
                 } else {
-                    callback(404);
+                    callback(403, 'This Session has expired!');
                 }
             });
         } else {
@@ -372,29 +379,30 @@ handlers._tokens.put = (data, callback) => {
     if(id && extend){
         //Get the token from the headers
         const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
-        //Verify if a given token id is currently valid
+        //Verify if a given token id is the same of the current authenticated session
         if(id == token){
-            //Lookup the token
-            schreiber.read('tokens',id, (err, tokenData) => {
-                if(!err && tokenData){
-                    //check to if token isn't already expired
-                    if(tokenData.expires > Date.now()){
-                        tokenData.expires = Date.now() + 1000 * 60 * 60;
-                        //Store the new updates
-                        schreiber.update('tokens', id, tokenData, (err) =>{
-                            if(!err || err == 200){
-                                console.log(tokenData);
-                                callback(200, tokenData);
-                            } else {
-                                callback(500, err);
-                            }
-                        });
-                    } else {
-                        callback(400, {'Error':'Token expired and could not be updated!'});
-                        console.log('expired!')
-                    }
+            //Verify if the token hasn't expired
+            handlers._tokens.verifyExpiredToken(token, (isTokenValid) => {
+                if(isTokenValid){
+                    //Lookup the token
+                    schreiber.read('tokens',id, (err, tokenData) => {
+                        if(!err && tokenData){
+                            tokenData.expires = Date.now() + 1000 * 60 * 60;
+                            //Store the new updates
+                            schreiber.update('tokens', id, tokenData, (err) =>{
+                                if(!err || err == 200){
+                                    console.log(tokenData);
+                                    callback(200, tokenData);
+                                } else {
+                                    callback(500, err);
+                                }
+                            });
+                        } else {
+                            callback(500, {'Error':'Could not retrieve tokenData'});
+                        }
+                    });
                 } else {
-                    callback(500, {'Error':'Could not retrieve tokenData'});
+                    callback(403, 'This Session has expired!');
                 }
             });
         } else {
@@ -417,7 +425,7 @@ handlers._tokens.delete = (data, callback) => {
     if(id){
         //Get the token from the headers
         const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
-        //Verify if a given token id is currently valid
+        //Verify if a given token id is the same of the current authenticated session
         if(id == token){
             schreiber.read('tokens', id, (err, data) => {
                 if(!err && data){
@@ -442,8 +450,8 @@ handlers._tokens.delete = (data, callback) => {
     }
 };
 
-//Verify if a given token id is currently valid
-handlers._tokens.verifyToken = (token, email, callback) => {
+//Verify if a given token belongs to current user in session and has not expired
+handlers._tokens.verifyUserToken = (token, email, callback) => {
     //lookup the token
     schreiber.read('tokens', token, (err, tokenData) => {
         if(!err && tokenData){
@@ -458,6 +466,81 @@ handlers._tokens.verifyToken = (token, email, callback) => {
         }
     });
 };
+
+//Verify if a given token has not expired
+handlers._tokens.verifyExpiredToken = (token, callback) => {
+    //lookup the token
+    schreiber.read('tokens', token, (err, tokenData) => {
+        if(!err && tokenData){
+            //check that token is for the given has not expired
+            if(tokenData.expires > Date.now()){
+                callback(true);
+            } else {
+                callback(false);
+            }
+        } else {
+            callback(false, {'Error': 'Could not find the specified token!'});
+        }
+    });
+}
+
+
+//Define Menu routes
+handlers.menu = (data, callback) => {
+    const acceptableMethods = ['get'];
+    if(acceptableMethods.indexOf(data.method) > -1){
+        handlers._menu[data.method](data, callback);
+    } else{
+        callback(405);
+    }
+};
+
+//Define the restaurant menu
+const menu = {}
+menu.pizzas = {
+    'opt1' : {'flavor':'Classic Chesse', 'sm': 8.65, 'lg':12.55},
+    'opt2' : {'flavor':'Pepperoni', 'sm': 8.65, 'lg':12.55},
+    'opt3' : {'flavor':'Buffalo Chicken', 'sm': 8.65, 'lg':12.55},
+    'opt4' : {'flavor':'Tropical', 'sm': 8.65, 'lg':12.55},
+    'opt5' : {'flavor':'Vegetarian', 'sm': 8.65, 'lg':12.55},
+    'opt6' : {'flavor':'Vegan', 'sm': 16.65, 'lg':22.55},
+    'opt7' : {'flavor':'Margherita', 'sm': 16.65, 'lg':22.55},
+};
+
+menu.drinks = {
+    'opt1': {'drink': 'coke', 'sm': 1.65, 'lg':2.55},
+    'opt2': {'drink': 'orange juice', 'sm': 2.65, 'lg':3.55},
+    'opt3': {'drink': 'Canned Beer', 'sm': 2.65},
+}
+
+menu.desserts = {
+    'opt1': {'dessert': 'Cookie', 'sm': 1.99, 'lg':3.98},
+    'opt2': {'dessert': 'Brownie', 'sm': 2.65, 'lg':3.55},
+    'opt3': {'dessert': 'Ice Cream', 'sm': 2.65, 'lg':3.55}
+}
+
+//SubContainer for handler.menu subMethods
+handlers._menu = {};
+
+//Define menu get submethod
+handlers._menu.get = (data, callback) => {
+     //Get the token from the headers
+     const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+     //Verify if a given token id is currently valid
+     if(token){
+         //verify if session hasn't expired
+         handlers._tokens.verifyExpiredToken(token, (isTokenValid) =>{
+             if(isTokenValid){
+                 console.log(menu);
+                 callback(200, menu);
+             } else {
+                callback(403, 'This Session has expired!');
+             }
+         });
+     } else {
+         callback(400, {'Error':'Missing or invalid required field!'})
+     }
+} 
 
 //ShoppingCart
 handlers.shoppingcarts = (data, callback) => {
@@ -562,6 +645,7 @@ handlers._shoppingcarts.get = (data, callback) => {
         callback(400, {'Error':'Missing or invalid required field!'});
     }
 };
+
 //Ping Handler
 handlers.ping = (data, callback) => {
     //route to inform the requestee that the app is alive

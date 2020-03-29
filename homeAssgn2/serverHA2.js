@@ -97,8 +97,9 @@ server.router = {
     'ping': handlers.ping,
     'users': handlers.users,
     'tokens' : handlers.tokens,
-    'orders': handlers.order,
     'shoppingcarts' : handlers.shoppingcarts,
+    'menu': handlers.menu,
+    'orders': handlers.order,
 };
 
 //Define server init function
