@@ -4,8 +4,7 @@ Hub for all the handlers
 
 //Dependencies
 const schreiber = require('./schreiberHA2');
-const tolls = require('./toolsHA2');
-const config = require('./configHA2');
+const tools = require('./toolsHA2');
 //Define the handlers
 var handlers = {};
 
@@ -370,7 +369,6 @@ handlers._tokens.get = (data, callback) => {
 handlers._tokens.put = (data, callback) => {  
     /* Required data: id, extend
        optional data: none
-       @TODO: only let authenticaded users update their own object. Don't let them update anyone else's.
      */
     //check valid fields
     const id = typeof(data.payload.id) == 'string' ? data.payload.id.trim() : false;
@@ -569,10 +567,9 @@ handlers._shoppingcarts.post = (data, callback) => {
 
     schreiber.read('tokens', token, (err, tokenData) => {
         let email = tokenData.email
-        console.log(email)
         //Verify authentication
-        handlers._tokens.verifyToken(token, email, (tokenIsValid, tokenData) => {
-            if(tokenIsValid){
+        handlers._tokens.verifyExpiredToken(token, (isTokenValid) =>{
+            if(isTokenValid){
                 //if authenticated get users data
                 schreiber.read('users', email, (err, userData) => {
                     if(!err){
@@ -605,7 +602,7 @@ handlers._shoppingcarts.post = (data, callback) => {
                     }
                 });
             } else {
-                callback(403);
+                callback(403,  {'Error':'This session has expired!'});
             }
         });
     });
@@ -625,9 +622,43 @@ handlers._shoppingcarts.get = (data, callback) => {
                 let email = cartData.email;
                  //Get the token from the headers
                 const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
-                //Verify if a given token id is currently valid
+                //Verify if a given token id is currently valid and if the user owns the cart
                 if(token){
-                    handlers._tokens.verifyToken(token, email, (tokenIsValid) => {
+                    handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
+                        if(tokenIsValid){
+                            callback(cartData);
+                        } else {
+                            callback(403, {'Error': 'Either the user does not exist, or the token is/has invalid/expired!'});
+                        }
+                    });
+                } else {
+                    callback(403, {'Error': 'Missing token in header, or token is invalid!'});
+                }
+            } else {
+                callback(400, {'Error':'Shopping cart doesn\'t exist!'})
+            }
+        });
+    } else {
+        callback(400, {'Error':'Missing or invalid required field!'});
+    }
+};
+
+handlers._shoppingcarts.put = (data, callback) => {
+    /* Required data: cartId
+       optional data: at least one variable from the menu (pizzas, drinks, desserts)
+     */
+    //check valid shoppingCart
+    const cartId = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.trim().length == 20 ? data.queryStringObject.id.trim() : false;
+
+    if(cartId){
+        schreiber.read('shoppingCarts', cartId, (err, cartData) => {
+            if(!err){
+                let email = cartData.email;
+                 //Get the token from the headers
+                const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+                //Verify if a given token id is currently valid and if the user owns the cart
+                if(token){
+                    handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
                         if(tokenIsValid){
                             callback(cartData);
                         } else {
