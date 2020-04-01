@@ -659,60 +659,64 @@ handlers._shoppingcarts.put = (data, callback) => {
     const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
 
     schreiber.read('tokens', token, (err, tokenData) => {
-        let email = tokenData.email
-        //Verify authentication
-        handlers._tokens.verifyExpiredToken(token, (isTokenValid) =>{
-            if(isTokenValid){
-                //if authenticated get users data
-                schreiber.read('users', email, (err, userData) => {
-                    if(!err){
-                        //get user's Shopping Cart
-                        schreiber.read('shoppingCarts', userData.shoppingCart, (err, cartData) => {
-                            if(!err){
-                                if(pizzaItemId){
-                                    for (var i = 0; i < cartData.pizzas.length; i++){
-                                        if (cartData.pizzas[i].itemId == pizzaItemId) {
-                                            cartData.pizzas.splice(i,1);
-                                            cartData.pizzas.push(data.payload.pizza);
-                                         }
+        if(!err){
+            let email = tokenData.email
+            //Verify authentication
+            handlers._tokens.verifyExpiredToken(token, (isTokenValid) =>{
+                if(isTokenValid){
+                    //if authenticated get users data
+                    schreiber.read('users', email, (err, userData) => {
+                        if(!err){
+                            //get user's Shopping Cart
+                            schreiber.read('shoppingCarts', userData.shoppingCart, (err, cartData) => {
+                                if(!err){
+                                    if(pizzaItemId){
+                                        for (var i = 0; i < cartData.pizzas.length; i++){
+                                            if (cartData.pizzas[i].itemId == pizzaItemId) {
+                                                cartData.pizzas.splice(i,1);
+                                                cartData.pizzas.push(data.payload.pizza);
+                                            }
+                                        }
                                     }
-                                }
-                                if(drinkItemId){
-                                    for (var i = 0; i < cartData.drinks.length; i++){
-                                        if (cartData.drinks[i].itemId == drinkItemId) {
-                                            cartData.drinks.splice(i,1);
-                                            cartData.drinks.push(data.payload.drink);
-                                         }
+                                    if(drinkItemId){
+                                        for (var i = 0; i < cartData.drinks.length; i++){
+                                            if (cartData.drinks[i].itemId == drinkItemId) {
+                                                cartData.drinks.splice(i,1);
+                                                cartData.drinks.push(data.payload.drink);
+                                            }
+                                        }
                                     }
-                                }
-                                if(dessertItemId){
-                                    for (var i = 0; i < cartData.desserts.length; i++){
-                                        if (cartData.desserts[i].itemId == dessertItemId) {
-                                            cartData.desserts.splice(i,1);
-                                            cartData.desserts.push(data.payload.dessert);
-                                         }
+                                    if(dessertItemId){
+                                        for (var i = 0; i < cartData.desserts.length; i++){
+                                            if (cartData.desserts[i].itemId == dessertItemId) {
+                                                cartData.desserts.splice(i,1);
+                                                cartData.desserts.push(data.payload.dessert);
+                                            }
+                                        }
                                     }
-                                }
-                            schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
-                                if(err == 200){
-                                    console.log(cartData);
-                                    callback(200, cartData);
+                                schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
+                                    if(err == 200){
+                                        console.log(cartData);
+                                        callback(200, cartData);
+                                    } else {
+                                        callback(500, {'Error':'Could not update Shopping Cart!'});
+                                    }
+                                });
                                 } else {
-                                    callback(500, {'Error':'Could not add item(s) to the cart!'});
+                                    callback(500, {'Error':'Could not find the user\'s Shopping Cart!'});
                                 }
                             });
-                            } else {
-                                callback(500, {'Error':'Could not find the user\'s Shopping Cart!'});
-                            }
-                        });
-                    } else {
-                        callback(500, {'Error':'Could not find the user!'});
-                    }
-                });
-            } else {
-                callback(403,  {'Error':'This session has expired!'});
-            }
-        });
+                        } else {
+                            callback(500, {'Error':'Could not find the user!'});
+                        }
+                    });
+                } else {
+                    callback(403,  {'Error':'This session has expired!'});
+                }
+            });
+        } else {
+            callback(403, {'Error':'User not proper authenticated'})
+        }
     });
 };
 
