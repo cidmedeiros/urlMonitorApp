@@ -556,8 +556,8 @@ handlers._shoppingcarts = {};
 //Define shoppingCart post submethod
 handlers._shoppingcarts.post = (data, callback) => {
     /* Required Data: at least one variable from the menu (pizzas, drinks, desserts)
-       Optional Data: none
-       Data must come in as a json parsed object */
+    Optional Data: none
+    Data must come in as a json parsed object */
     //check the provided data if filled out
     const pizza = typeof(data.payload.pizza) == 'object' && Object.keys(data.payload.pizza).length > 0 ? data.payload.pizza : false;
     const drink = typeof(data.payload.drink) == 'object' && Object.keys(data.payload.drink).length > 0 ? data.payload.drink : false;
@@ -573,22 +573,25 @@ handlers._shoppingcarts.post = (data, callback) => {
                 //if authenticated get users data
                 schreiber.read('users', email, (err, userData) => {
                     if(!err){
-                        console.log(userData.shoppingCart)
                         //get user's Shopping Cart
                         schreiber.read('shoppingCarts', userData.shoppingCart, (err, cartData) => {
                             if(!err){
                                 if(pizza){
+                                    pizza.itemId = tools.createRandomString(20);
                                     cartData.pizzas.push(pizza);
                                 }
                                 if(drink){
+                                    drink.itemId = tools.createRandomString(20);
                                     cartData.drinks.push(drink);
                                 }
                                 if(dessert){
+                                    dessert.itemId = tools.createRandomString(20);
                                     cartData.desserts.push(dessert);
                                 }
                             schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
                                 if(err == 200){
-                                    callback(200);
+                                    console.log(cartData);
+                                    callback(200, cartData);
                                 } else {
                                     callback(500, {'Error':'Could not add item(s) to the cart!'});
                                 }
@@ -644,37 +647,73 @@ handlers._shoppingcarts.get = (data, callback) => {
 };
 
 handlers._shoppingcarts.put = (data, callback) => {
-    /* Required data: cartId
-       optional data: at least one variable from the menu (pizzas, drinks, desserts)
+    /* Required data: itemId to be updated
+       optional data: none
      */
-    //check valid shoppingCart
-    const cartId = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.trim().length == 20 ? data.queryStringObject.id.trim() : false;
+    //Data must come in as a json parsed object */
+    //check the provided data if filled out
+    const pizzaItemId = typeof(data.payload.pizza.itemId) == 'string' && data.payload.pizza.itemId.length == 20 ? data.payload.pizza.itemId : false;
+    const drinkItemId = typeof(data.payload.drink.itemId) == 'string' && data.payload.drink.itemId.length == 20 ? data.payload.drink.itemId : false;
+    const dessertItemId = typeof(data.payload.dessert.itemId) == 'string' && data.payload.dessert.itemId.length == 20 ? data.payload.dessert.itemId : false;
+    //Get the token from the headers
+    const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
 
-    if(cartId){
-        schreiber.read('shoppingCarts', cartId, (err, cartData) => {
-            if(!err){
-                let email = cartData.email;
-                 //Get the token from the headers
-                const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
-                //Verify if a given token id is currently valid and if the user owns the cart
-                if(token){
-                    handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
-                        if(tokenIsValid){
-                            callback(cartData);
-                        } else {
-                            callback(403, {'Error': 'Either the user does not exist, or the token is/has invalid/expired!'});
-                        }
-                    });
-                } else {
-                    callback(403, {'Error': 'Missing token in header, or token is invalid!'});
-                }
+    schreiber.read('tokens', token, (err, tokenData) => {
+        let email = tokenData.email
+        //Verify authentication
+        handlers._tokens.verifyExpiredToken(token, (isTokenValid) =>{
+            if(isTokenValid){
+                //if authenticated get users data
+                schreiber.read('users', email, (err, userData) => {
+                    if(!err){
+                        //get user's Shopping Cart
+                        schreiber.read('shoppingCarts', userData.shoppingCart, (err, cartData) => {
+                            if(!err){
+                                if(pizzaItemId){
+                                    for (var i = 0; i < cartData.pizzas.length; i++){
+                                        if (cartData.pizzas[i].itemId == pizzaItemId) {
+                                            cartData.pizzas.splice(i,1);
+                                            cartData.pizzas.push(data.payload.pizza);
+                                         }
+                                    }
+                                }
+                                if(drinkItemId){
+                                    for (var i = 0; i < cartData.drinks.length; i++){
+                                        if (cartData.drinks[i].itemId == drinkItemId) {
+                                            cartData.drinks.splice(i,1);
+                                            cartData.drinks.push(data.payload.drink);
+                                         }
+                                    }
+                                }
+                                if(dessertItemId){
+                                    for (var i = 0; i < cartData.desserts.length; i++){
+                                        if (cartData.desserts[i].itemId == dessertItemId) {
+                                            cartData.desserts.splice(i,1);
+                                            cartData.desserts.push(data.payload.dessert);
+                                         }
+                                    }
+                                }
+                            schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
+                                if(err == 200){
+                                    console.log(cartData);
+                                    callback(200, cartData);
+                                } else {
+                                    callback(500, {'Error':'Could not add item(s) to the cart!'});
+                                }
+                            });
+                            } else {
+                                callback(500, {'Error':'Could not find the user\'s Shopping Cart!'});
+                            }
+                        });
+                    } else {
+                        callback(500, {'Error':'Could not find the user!'});
+                    }
+                });
             } else {
-                callback(400, {'Error':'Shopping cart doesn\'t exist!'})
+                callback(403,  {'Error':'This session has expired!'});
             }
         });
-    } else {
-        callback(400, {'Error':'Missing or invalid required field!'});
-    }
+    });
 };
 
 //Ping Handler
