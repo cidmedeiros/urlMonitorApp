@@ -482,7 +482,6 @@ handlers._tokens.verifyExpiredToken = (token, callback) => {
     });
 }
 
-
 //Define Menu routes
 handlers.menu = (data, callback) => {
     const acceptableMethods = ['get'];
@@ -622,14 +621,15 @@ handlers._shoppingcarts.get = (data, callback) => {
     if(cartId){
         schreiber.read('shoppingCarts', cartId, (err, cartData) => {
             if(!err){
-                let email = cartData.email;
+                let email = cartData.user;
                  //Get the token from the headers
                 const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
                 //Verify if a given token id is currently valid and if the user owns the cart
                 if(token){
                     handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
                         if(tokenIsValid){
-                            callback(cartData);
+                            console.log(cartData);
+                            callback(200, cartData);
                         } else {
                             callback(403, {'Error': 'Either the user does not exist, or the token is/has invalid/expired!'});
                         }
@@ -652,9 +652,9 @@ handlers._shoppingcarts.put = (data, callback) => {
      */
     //Data must come in as a json parsed object */
     //check the provided data if filled out
-    const pizzaItemId = typeof(data.payload.pizza.itemId) == 'string' && data.payload.pizza.itemId.length == 20 ? data.payload.pizza.itemId : false;
-    const drinkItemId = typeof(data.payload.drink.itemId) == 'string' && data.payload.drink.itemId.length == 20 ? data.payload.drink.itemId : false;
-    const dessertItemId = typeof(data.payload.dessert.itemId) == 'string' && data.payload.dessert.itemId.length == 20 ? data.payload.dessert.itemId : false;
+    const pizzaItemId = typeof(data.payload.pizza.itemId) == 'string' && data.payload.pizza.itemId.trim().length == 20 ? data.payload.pizza.itemId : false;
+    const drinkItemId = typeof(data.payload.drink.itemId) == 'string' && data.payload.drink.itemId.trim().length == 20 ? data.payload.drink.itemId : false;
+    const dessertItemId = typeof(data.payload.dessert.itemId) == 'string' && data.payload.dessert.itemId.trim().length == 20 ? data.payload.dessert.itemId : false;
     //Get the token from the headers
     const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
 
