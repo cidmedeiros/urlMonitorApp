@@ -652,9 +652,29 @@ handlers._shoppingcarts.put = (data, callback) => {
      */
     //Data must come in as a json parsed object */
     //check the provided data if filled out
-    const pizzaItemId = typeof(data.payload.pizza.itemId) == 'string' && data.payload.pizza.itemId.trim().length == 20 ? data.payload.pizza.itemId : false;
-    const drinkItemId = typeof(data.payload.drink.itemId) == 'string' && data.payload.drink.itemId.trim().length == 20 ? data.payload.drink.itemId : false;
-    const dessertItemId = typeof(data.payload.dessert.itemId) == 'string' && data.payload.dessert.itemId.trim().length == 20 ? data.payload.dessert.itemId : false;
+    const pizza = typeof(data.payload.pizza) == 'object' && Object.keys(data.payload.pizza).length > 0 ? data.payload.pizza : false;
+    const drink = typeof(data.payload.drink) == 'object' && Object.keys(data.payload.drink).length > 0 ? data.payload.drink : false;
+    const dessert = typeof(data.payload.dessert) == 'object' && Object.keys(data.payload.dessert).length > 0 ? data.payload.dessert : false;
+
+    //check for the itemId
+    if(pizza){
+        var pizzaItemId = typeof(data.payload.pizza.itemId) == 'string' && data.payload.pizza.itemId.trim().length == 20 ? data.payload.pizza.itemId : false;
+    } else{
+        var pizzaItemId = false;
+    }
+
+    if(drink){
+        var drinkItemId = typeof(data.payload.drink.itemId) == 'string' && data.payload.drink.itemId.trim().length == 20 ? data.payload.drink.itemId : false;
+    } else{
+        var drinkItemId = false;
+    }
+    
+    if(dessert){
+        var dessertItemId = typeof(data.payload.dessert.itemId) == 'string' && data.payload.dessert.itemId.trim().length == 20 ? data.payload.dessert.itemId : false;
+    } else{
+        var dessertItemId = false;
+    }
+
     //Get the token from the headers
     const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
 
