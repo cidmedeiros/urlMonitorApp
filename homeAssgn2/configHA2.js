@@ -8,7 +8,6 @@ let environments = {}
 
 //define the staging enviroment (default)
 environments.staging = {
-    'httpPort': 3000,
     'httpsPort': 3001,
     'envName' : 'staging',
     'hashingSecret': 'aVeryWeirdCreatureHere',
@@ -16,7 +15,6 @@ environments.staging = {
 
 //define the production enviroment
 environments.production = {
-    'httpPort': 5000,
     'httpsPort': 5001,
     'envName' : 'production',
     'hashingSecret': 'anotherVeryWeirdCreatureHere',

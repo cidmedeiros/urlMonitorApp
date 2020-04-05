@@ -1,7 +1,7 @@
 /* SERVER-related tasks */
 
 //Dependencies
-const http = require('http');
+const https = require('https');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const config = require('./configHA2');
@@ -15,8 +15,14 @@ const debug = util.debuglog('server'); //to monitor the server module -> NODE_DE
 //Instantiate the server module object
 var server = {};
 
-//Instantiate HTTP server
-server.httpServer = http.createServer((req, res) => {
+//Instantiate HTTPS server
+server.httpsServerOptions = {
+    'key': fs.readFileSync(path.join(__dirname,'/../https/key.pem')),
+    'cert': fs.readFileSync(path.join(__dirname,'/../https/cert.pem')),
+    passphrase: 'somethingidontknow'
+};
+
+server.httpsServer = https.createServer(server.httpsServerOptions,(req, res) => {
     server.unifiedServer(req, res);
 });
 
@@ -78,7 +84,7 @@ server.unifiedServer = (req, res) => {
             let handlerPayloadString = JSON.stringify(handlerPayload);
 
             //Return the responses
-            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Content-Type','application/json');
             res.writeHead(statusCode);
             res.end(handlerPayloadString);
 
@@ -105,8 +111,8 @@ server.router = {
 //Define server init function
 server.init = () =>{
     //Start the HTTP server and have it listen to the Env port
-    server.httpServer.listen(config.httpPort, () =>{
-        console.log('\x1b[36m%s\x1b[0m', `Server running on ${config.envName} mode, and listening on port ${config.httpPort} with HTTP protocol`);
+    server.httpsServer.listen(config.httpsPort, () =>{
+        console.log('\x1b[36m%s\x1b[0m', `Server running on ${config.envName} mode, and listening on port ${config.httpsPort} with HTTPS protocol`);
     });
 };
 
