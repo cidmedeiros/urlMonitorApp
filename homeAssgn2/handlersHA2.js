@@ -335,7 +335,7 @@ handlers._tokens.get = (data, callback) => {
     /* Required data: id
        optional data: none */
     //check valid id
-    const id = typeof(data.queryStringObject.id) == 'string' ? data.queryStringObject.id.trim() : false;
+    const id = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.length == 20 ? data.queryStringObject.id.trim() : false;
 
     if(id){
         //Get the token from the headers
@@ -739,6 +739,14 @@ handlers._shoppingcarts.put = (data, callback) => {
         }
     });
 };
+
+handlers._orders.post = (data, callback) => {
+    /* Required data: shoppingCartId; paymentMethod, CardData*/
+    //check the incoming data
+    const shoppingCartId = typeof(data.payload.shoppingCartId) == 'string' && data.payload.shoppingCartId.length == 20 ? data.payload.shoppingCartId.trim() : false;
+    const paymentMethod = typeof(data.payload.paymentMethod) == 'string' && data.payload.paymentMethod.length == 4 ? data.payload.shoppingCartId.trim() : false;
+
+}
 
 //Ping Handler
 handlers.ping = (data, callback) => {

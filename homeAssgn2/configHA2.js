@@ -11,6 +11,7 @@ environments.staging = {
     'httpsPort': 3001,
     'envName' : 'staging',
     'hashingSecret': 'aVeryWeirdCreatureHere',
+    'stripeKey': 'sk_test_Ejs7U7Yqes4RsWQnHYwtmsmL00iuXvXfMu'
 };
 
 //define the production enviroment
