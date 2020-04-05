@@ -3,6 +3,7 @@
 //Dependencies
 const crypto = require('crypto');
 const config = require('./configHA2');
+const stripe = require('stripe');
 
 //Container for all the helper functions
 tools = {};
