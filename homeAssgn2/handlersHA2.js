@@ -804,6 +804,8 @@ handlers._orders.post = (data, callback) => {
                                         }
                                     });
                                     shoppingCart = {
+                                        cartId:shoppingCartId,
+                                        user:email,
                                         pizzas: [],
                                         drinks: [],
                                         desserts: []
@@ -816,7 +818,7 @@ handlers._orders.post = (data, callback) => {
                                                         if(!err){
                                                             userData.orders.push(order.orderId);
                                                             schreiber.update('users', email, userData, (err) => {
-                                                                if(!err){
+                                                                if(!err || err == 200){
                                                                     callback(200);
                                                                 } else {
                                                                     callback(500, {'Could not add order to user\'s file': err});
