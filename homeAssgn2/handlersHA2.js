@@ -740,12 +740,118 @@ handlers._shoppingcarts.put = (data, callback) => {
     });
 };
 
+//Users
+handlers.orders = (data, callback) => {
+    const acceptableMethods = ['get','post','put','delete'];
+    if(acceptableMethods.indexOf(data.method) > -1){
+        handlers._orders[data.method](data, callback);
+    } else{
+        callback(405);
+    }
+};
+
+//SubContainer for handler.uses subMethods
+handlers._orders = {};
+
 handlers._orders.post = (data, callback) => {
-    /* Required data: shoppingCartId; paymentMethod, CardData*/
+    /* Required data: shoppingCartId*/
     //check the incoming data
     const shoppingCartId = typeof(data.payload.shoppingCartId) == 'string' && data.payload.shoppingCartId.length == 20 ? data.payload.shoppingCartId.trim() : false;
-    const paymentMethod = typeof(data.payload.paymentMethod) == 'string' && data.payload.paymentMethod.length == 4 ? data.payload.shoppingCartId.trim() : false;
-
+    if(shoppingCartId){
+        //Get the token from the headers
+        const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+        if(token){
+            schreiber.read('shoppingCarts', shoppingCartId, (err, shopData) =>{
+                if(!err){
+                    const email = shopData.user
+                    //Verify if a given token belongs to current user in session and has not expired
+                    handlers._tokens.verifyUserToken(token, email, async (tokenIsValid) => {
+                        if(tokenIsValid){
+                            let order = {
+                                orderId : tools.createRandomString(20),
+                                paymentMethod: 'card',
+                                pizzas: [],
+                                drinks: [],
+                                desserts: [],
+                                amount : 0
+                            }
+                            if(shopData.pizzas.length > 0){
+                                shopData.pizzas.forEach(pizza =>{
+                                    order.pizzas.push(pizza);
+                                    order.amount = Object.keys(pizza).indexOf('sm') > -1 ? order.amount + pizza.sm : order.amount+ pizza.lg;
+                                });
+                            }
+                            if(shopData.drinks.length > 0){
+                                shopData.drinks.forEach(drink =>{
+                                    order.drinks.push(drink);
+                                    order.amount = Object.keys(drink).indexOf('sm') > -1 ? order.amount + drink.sm : order.amount + drink.lg
+                                })
+                            }
+                            if(shopData.desserts.length > 0){
+                                shopData.desserts.forEach(dessert =>{
+                                    order.desserts.push(dessert);
+                                    order.amount = Object.keys(dessert).indexOf('sm') > -1 ? order.amount + dessert.sm : order.amount + dessert.lg
+                                })
+                            }
+                            order.amount = Math.round(order.amount).toFixed(2);
+                            await tools.stripeCharge(order, async (err, confirmedPay) => {
+                                if(!err && confirmedPay){
+                                    await tools.sendEmail(email, order, (err, confirmedReceipt) => {
+                                        if(!err && confirmedReceipt){
+                                            order.receiptEmail = confirmedReceipt;
+                                        } else {
+                                            order.receiptEmail = false;
+                                        }
+                                    });
+                                    shoppingCart = {
+                                        pizzas: [],
+                                        drinks: [],
+                                        desserts: []
+                                    }
+                                    schreiber.update('shoppingCarts', shoppingCartId, shoppingCart, (err) => {
+                                        if(!err || err == 200){
+                                            schreiber.create('orders', order.orderId, order, (err) =>{
+                                                if(!err || err == 200){
+                                                    schreiber.read('users', email, (err, userData) =>{
+                                                        if(!err){
+                                                            userData.orders.push(order.orderId);
+                                                            schreiber.update('users', email, userData, (err) => {
+                                                                if(!err){
+                                                                    callback(200);
+                                                                } else {
+                                                                    callback(500, {'Could not add order to user\'s file': err});
+                                                                }
+                                                            });
+                                                        } else {
+                                                            callback(500, {'Could not add order to user\'s file': err});
+                                                        }
+                                                    });
+                                                } else {
+                                                    callback(500, {'Could not save order history': err});
+                                                }
+                                            });
+                                        } else {
+                                            console.log(500, {'Could not empty shoppingCart!':err});
+                                        }
+                                    })
+                                } else{
+                                    callback(400, {'Error': 'Your payment could not be confirmed!'});
+                                }
+                            })
+                        } else {
+                            callback(403, {'Error': 'Either the user does not exist, or the token is/has invalid/expired!'});
+                        }
+                    });
+                } else {
+                    callback(403, {'Error': 'Token is/has invalid/expired!'});
+                }
+            });
+        } else {
+            callback(403, {'Error': 'Missing token in header, or token is invalid!'});
+        }
+    } else {
+        callback(400, {'Error':'Missing or invalid required field!'});
+    }
 }
 
 //Ping Handler
