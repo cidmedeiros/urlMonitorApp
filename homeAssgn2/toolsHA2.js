@@ -3,7 +3,8 @@
 //Dependencies
 const crypto = require('crypto');
 const config = require('./configHA2');
-const stripe = require('stripe');
+const https = require('https');
+const querystring = require('querystring');
 
 //Container for all the helper functions
 tools = {};
@@ -51,4 +52,82 @@ tools.validateEmail = (email) => {
     return re.test(String(email).toLowerCase());
 }
 
+tools.parseQuery = (obj) => {
+    const query = Object.keys(obj).map( k => `${k}=${obj[k]}`).join("&");
+    return query.length > 0 ? `?${query}` : "";
+  }
+
+tools.stripeCharge = (callback) => {
+
+    let apiUrl = 'https://api.stripe.com';
+
+    const query = tools.parseQuery(
+        {
+            success_url: 'https://example.com/success',
+            cancel_url: 'https://example.com/cancel',
+            payment_method_types: ['card'],
+            line_items: [
+              {
+                name: 'T-shirt',
+                description: 'Comfortable cotton t-shirt',
+                amount: 1500,
+                currency: 'usd',
+                quantity: 2,
+              },
+            ]
+          }
+    );
+
+    const urlRequest = `${apiUrl}${query}`;
+
+    const requestDetails = {
+        'protocol' : 'https:',
+        'method' : 'GET',
+        'headers': {
+          "Authorization": `Bearer ${config.stripeKey}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+    }
+
+    var req = https.request(urlRequest, requestDetails, (res) =>{
+        // Grab the status of the sent request
+        var status =  res.statusCode;
+        // Callback successfully if the request went through
+        if(status == 200 || status == 201){
+        console.log('ok');
+        } else {
+        callback('Status code returned was '+status);
+        }
+    });
+
+    // Bind to the error event so it doesn't get thrown
+    req.on('error', function(e){
+        callback(e);
+    });
+
+    // Buffer the data in case of successful streaming
+    let body = ''; 
+    req.on("data", data => {
+        body += data;
+        console.log(body);
+    });
+    
+    //
+    req.on("end", () => {
+    body = JSON.parse(body);
+    console.log(body);
+    });
+}
+
+tools.sendEmail = (email, order, callback) => {
+    callback(false, true);
+}
+
+tools.stripeCharge((err) =>{
+    if(!err){
+        console.log(err);
+    } else {
+        console.log(err);
+    }
+});
 module.exports = tools;
