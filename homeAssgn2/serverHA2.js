@@ -59,7 +59,7 @@ server.unifiedServer = (req, res) => {
         //cuts off data stream
         buffer += decoder.end();
 
-        //Verifies the handler this request should go to.
+        //Verifies the handler (function defined in the handlers file) this request should go to.
         //If one is not found, it should go to notFound handler.
         let chosenhandler = typeof(server.router[trimmedPath]) !== 'undefined' ? server.router[trimmedPath] : handlers.notFound;  
 
@@ -78,7 +78,7 @@ server.unifiedServer = (req, res) => {
             statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
 
             //use the handler payload object if any or default to {}
-            handlerPayload = typeof(payload) == 'object' ? handlerPayload : {};
+            handlerPayload = typeof(data.payload) == 'object' ? handlerPayload : {};
 
             //convert the handlerPayload to String to be sent to the user
             let handlerPayloadString = JSON.stringify(handlerPayload);
