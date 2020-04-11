@@ -5,6 +5,7 @@ Hub for all the handlers
 //Dependencies
 const schreiber = require('./schreiberHA2');
 const tools = require('./toolsHA2');
+const stripe = require('./stripe');
 //Define the handlers
 var handlers = {};
 

@@ -11,7 +11,11 @@ environments.staging = {
     'httpsPort': 3001,
     'envName' : 'staging',
     'hashingSecret': 'aVeryWeirdCreatureHere',
-    'stripeKey': 'sk_test_Ejs7U7Yqes4RsWQnHYwtmsmL00iuXvXfMu'
+    'stripeInfo':{
+        'stripeKey': 'sk_test_Ejs7U7Yqes4RsWQnHYwtmsmL00iuXvXfMu',
+        'currency': 'usd',
+        'card': ['tok_visa', 'tok_mastercard']
+    }
 };
 
 //define the production enviroment
