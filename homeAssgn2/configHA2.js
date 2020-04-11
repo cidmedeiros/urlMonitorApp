@@ -17,7 +17,7 @@ environments.staging = {
     },
     'mailGunInfo':{
         'mailgunKey':'',
-        'from': 'cidluiz@gmail.com'
+        'from': ''
     }
 };
 
