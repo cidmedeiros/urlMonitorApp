@@ -53,6 +53,13 @@ tools.validateEmail = (email) => {
     return re.test(String(email).toLowerCase());
 }
 
+//queryfy objects
+tools.objToQuery = (obj) => {
+    const query = Object.keys(obj).map( k => `${k}=${obj[k]}`).join("&");
+    return query.length > 0 ? `?${query}` : "";
+}
+
+//Send order for charge through Stripe
 tools.charge = (chargeData, callback) => {
     //Request stripe api to create a card
     //Verify Data
@@ -120,11 +127,56 @@ tools.charge = (chargeData, callback) => {
     }
 };
 
-tools.objToQuery = (obj) => {
-    const query = Object.keys(obj).map( k => `${k}=${obj[k]}`).join("&");
-    return query.length > 0 ? `?${query}` : "";
-}
+// Send receipt and order summary through email using MailGun
+tools.sendEmail = (email, order, callback) => {
 
+    const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
+  
+    if (email && message) {
+      let payload = {
+        'from': config.mailGunInfo.from,
+        'to': email,
+        'subject': 'Payment Successful',
+        'text': `Your order ${order.Id} - ${order.amount} has been confirmed and your pizzas are on the way`
+      };
+  
+      let payloadString = queryString.stringify(payload);
+  
+      let requestDetails = {
+          'protocol': 'https:',
+          'hostname': 'api.mailgun.net/v3/',
+          'method': 'POST',
+          'path': 'sandboxb0302d63c9104a70bddecb2d668c3b96.mailgun.org',
+          'auth': config.mailGunInfo.key,
+          'headers': {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Length': Buffer.byteLength(payloadString)
+            }
+      };
+  
+      let req = https.request(requestDetails, (res) => {
+        let status = res.statusCode;
+        if (status === 200 || status === 201) {
+          callback(false);
+        } else {
+          callback(`Status code returned was ${status}`);
+        }
+      });
+  
+      req.on('error', (e) => {
+        callback(e);
+      });
+  
+      req.write(payloadString);
+  
+      req.end();
+  
+    } else {
+      callback('There was a problem with the email or message provided.');
+    }
+  
+  };
+  
 tools.sendEmail = (email, order, callback) => {
     callback(false, true);
 }
