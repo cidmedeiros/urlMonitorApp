@@ -12,8 +12,12 @@ environments.staging = {
     'envName' : 'staging',
     'hashingSecret': 'aVeryWeirdCreatureHere',
     'stripeInfo':{
-        'stripeKey': 'sk_test_Ejs7U7Yqes4RsWQnHYwtmsmL00iuXvXfMu',
+        'stripeKey': '',
         'card': ['tok_visa', 'tok_mastercard']
+    },
+    'mailGunInfo':{
+        'mailgunKey':'',
+        'from': 'cidluiz@gmail.com'
     }
 };
 
