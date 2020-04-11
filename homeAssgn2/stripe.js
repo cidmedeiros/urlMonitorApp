@@ -14,20 +14,16 @@ stripe = {}
 
 stripe.createStrCustomer = (customerData, callback) => {
     //Request stripe api to confirm the payment
-
-    //object summary coming from the order requested by the customer
-
+    //Object summary coming from the order requested by the customer
     let payload = {
         description: customerData.description
     }
-    /*
-        The encodeURIComponent() function encodes a URI by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character (will only be four escape sequences for characters composed of two "surrogate" characters).
-     */
-    let payloadNotEncoded = tools.objToQuery(payload);
+
+    let queryPayload = tools.objToQuery(payload);
 
     //raw http url to use on postman tests only
     let endpoint = 'https://api.stripe.com/v1/customers?';
-    var rawUrl = `${endpoint}${payloadNotEncoded}`;
+    var rawUrl = `${endpoint}${queryPayload}`;
     console.log(rawUrl)
 
     //craft object to http.request
@@ -39,7 +35,7 @@ stripe.createStrCustomer = (customerData, callback) => {
         'headers': {
           "Authorization": `Bearer ${config.stripeKey}`,
           "Content-Type": "application/x-www-form-urlencoded",
-          'Content-Length': Buffer.byteLength(payloadNotEncoded)
+          'Content-Length': Buffer.byteLength(queryPayload)
         }
     };
 
@@ -48,7 +44,16 @@ stripe.createStrCustomer = (customerData, callback) => {
         var status =  res.statusCode;
         // Callback successfully if the request went through
         if(status == 200 || status == 201){
-        callback(res);
+            //get the payload as an object
+            let decoder = new StringDecoder('utf-8');
+            let body = '';
+            //on means event emitter. The data means stream of data
+            res.on('data', (data) =>{
+                body += decoder.write(data);
+            });
+            res.on('end', () =>{
+                callback(JSON.parse(body));
+            });
         } else {
         callback('Status code returned was '+status);
         }
@@ -60,7 +65,7 @@ stripe.createStrCustomer = (customerData, callback) => {
     });
 
     // Add the payload
-    req.write(payloadNotEncoded);
+    req.write(queryPayload);
 
 };
 
@@ -121,6 +126,6 @@ stripe.charge = (callback) => {
     req.end();
 }
 
-stripe.createStrCustomer(customerData, (res) =>{
-    console.log(res);
+stripe.createStrCustomer(customerData, (data) =>{
+    console.log(data);
 });
