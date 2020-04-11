@@ -13,7 +13,6 @@ environments.staging = {
     'hashingSecret': 'aVeryWeirdCreatureHere',
     'stripeInfo':{
         'stripeKey': 'sk_test_Ejs7U7Yqes4RsWQnHYwtmsmL00iuXvXfMu',
-        'currency': 'usd',
         'card': ['tok_visa', 'tok_mastercard']
     }
 };

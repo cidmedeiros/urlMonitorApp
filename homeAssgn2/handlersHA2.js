@@ -6,6 +6,7 @@ Hub for all the handlers
 const schreiber = require('./schreiberHA2');
 const tools = require('./toolsHA2');
 const stripe = require('./stripe');
+const config = require('./configHA2');
 //Define the handlers
 var handlers = {};
 
@@ -758,6 +759,9 @@ handlers._orders.post = (data, callback) => {
     /* Required data: shoppingCartId*/
     //check the incoming data
     const shoppingCartId = typeof(data.payload.shoppingCartId) == 'string' && data.payload.shoppingCartId.length == 20 ? data.payload.shoppingCartId.trim() : false;
+
+    orderCard = typeof(data.payload.card) === 'string' && config.stripeInfo.card.indexOf(data.payload.card) > -1 ? data.payload.card.trim() : false;
+
     if(shoppingCartId){
         //Get the token from the headers
         const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
@@ -770,7 +774,7 @@ handlers._orders.post = (data, callback) => {
                         if(tokenIsValid){
                             let order = {
                                 orderId : tools.createRandomString(20),
-                                paymentMethod: 'card',
+                                paymentMethod: orderCard,
                                 pizzas: [],
                                 drinks: [],
                                 desserts: [],
@@ -795,8 +799,8 @@ handlers._orders.post = (data, callback) => {
                                 })
                             }
                             order.amount = Math.round(order.amount).toFixed(2);
-                            await tools.stripeCharge(order, async (err, confirmedPay) => {
-                                if(!err && confirmedPay){
+                            await stripe.charge(order, (confirmedPay) => {
+                                if(confirmedPay){
                                     await tools.sendEmail(email, order, (err, confirmedReceipt) => {
                                         if(!err && confirmedReceipt){
                                             order.receiptEmail = confirmedReceipt;
