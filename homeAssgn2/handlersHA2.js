@@ -5,7 +5,6 @@ Hub for all the handlers
 //Dependencies
 const schreiber = require('./schreiberHA2');
 const tools = require('./toolsHA2');
-const stripe = require('./stripe');
 const config = require('./configHA2');
 //Define the handlers
 var handlers = {};
@@ -799,9 +798,9 @@ handlers._orders.post = (data, callback) => {
                                 })
                             }
                             order.amount = Math.round(order.amount).toFixed(2);
-                            await stripe.charge(order, (confirmedPay) => {
+                            await tools.charge(order, (confirmedPay) => {
                                 if(confirmedPay){
-                                    await tools.sendEmail(email, order, (err, confirmedReceipt) => {
+                                    await tools.sendEmail(email, order, (confirmedReceipt) => {
                                         if(!err && confirmedReceipt){
                                             order.receiptEmail = confirmedReceipt;
                                         } else {
