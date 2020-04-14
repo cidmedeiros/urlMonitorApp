@@ -133,43 +133,41 @@ tools.charge = (chargeData, callback) => {
 
 // Send receipt and order summary through email using MailGun
 tools.sendEmail = (email, order, callback) => {
-
     const emailVer = typeof(email) == 'string' && tools.validateEmail(email.trim()) ? email.trim() : false;
   
     if (emailVer) {
       let payload = {
-        'from': config.mailGunInfo.from,
-        'to': email,
-        'subject': 'Payment Successful',
-        'text': `Your order ${order.Id} - ${order.amount} has been confirmed and your pizzas are on the way`
-      };
-  
-      let queryPayload = querystring.stringify(payload);
-      //raw http url to use on postman tests only
-      let endpoint = `https://api.mailgun.net/v3/sandboxb0302d63c9104a70bddecb2d668c3b96.mailgun.org`;
-      var rawUrl = `${endpoint}${queryPayload}`;
-      console.log(rawUrl);
-  
-      let requestDetails = {
-          'protocol': 'https:',
-          'hostname': 'api.mailgun.net/v3/',
-          'method': 'POST',
-          'path': 'sandboxb0302d63c9104a70bddecb2d668c3b96.mailgun.org',
-          'auth': config.mailGunInfo.mailgunKey,
-          'headers': {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Content-Length': Buffer.byteLength(queryPayload)
-            }
-      };
-  
-      let req = https.request(requestDetails, (res) => {
-        let status = res.statusCode;
-        if (status === 200 || status === 201) {
-          callback(false);
-        } else {
-          callback(`Status code returned was ${status}`);
+          'from': config.mailGunInfo.from,
+          'to': email,
+          'subject': 'Payment Successful',
+          'text': `Your order ${order.Id} - ${order.amount} has been confirmed and your pizzas are on the way`
         }
-      });
+
+        let queryPayload = querystring.stringify(payload);
+        //http url to use on postman tests only
+        let endpoint = `https://api.mailgun.net/v3/sandboxb0302d63c9104a70bddecb2d668c3b96.mailgun.org`;
+        var rawUrl = `${endpoint}${queryPayload}`;
+  
+        let requestDetails = {
+            'protocol': 'https:',
+            'hostname': 'api.mailgun.net/v3/',
+            'method': 'POST',
+            'path': 'sandboxb0302d63c9104a70bddecb2d668c3b96.mailgun.org',
+            'auth': config.mailGunInfo.mailgunKey,
+            'headers': {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(queryPayload)
+            }
+        }
+  
+        let req = https.request(requestDetails, (res) => {
+            let status = res.statusCode;
+            if (status === 200 || status === 201) {
+                callback(false);
+            } else {
+                callback(`Status code returned was ${status}`);
+            }
+        });
   
       req.on('error', (e) => {
         callback(e);
@@ -180,19 +178,9 @@ tools.sendEmail = (email, order, callback) => {
       req.end();
   
     } else {
-      callback('There was a problem with the email or message provided.');
+      callback('The e-mail provided is not of a valid format.');
     }
   
 };
-
-let email = 'cidmedeiros@icloud.com'
-let order = {
-    Id: '123456789',
-    amount: 90
-}
-  
-tools.sendEmail(email, order, (ans) => {
-    console.log(ans);
-})
 
 module.exports = tools;
