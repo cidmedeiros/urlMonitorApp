@@ -798,10 +798,10 @@ handlers._orders.post = (data, callback) => {
                                 })
                             }
                             order.amount = Math.round(order.amount).toFixed(2);
-                            tools.charge(order, (charge) => {
-                                if(charge){
-                                    await tools.sendEmail(email, order, (confirmedReceipt) => {
-                                        if(!err && confirmedReceipt){
+                            tools.charge(order, (confirmedpay) => {
+                                if(confirmedpay){
+                                    tools.sendEmail(email, order, (err) => {
+                                        if(!err){
                                             order.receiptEmail = confirmedReceipt;
                                         } else {
                                             order.receiptEmail = false;
@@ -825,15 +825,15 @@ handlers._orders.post = (data, callback) => {
                                                                 if(!err || err == 200){
                                                                     callback(200);
                                                                 } else {
-                                                                    callback(500, {'Could not add order to user\'s file': err});
+                                                                    callback(500, {'Could not update user\'s file.': err});
                                                                 }
                                                             });
                                                         } else {
-                                                            callback(500, {'Could not add order to user\'s file': err});
+                                                            callback(500, {'Could not add order to user\'s history': err});
                                                         }
                                                     });
                                                 } else {
-                                                    callback(500, {'Could not save order history': err});
+                                                    callback(500, {'Could not save order': err});
                                                 }
                                             });
                                         } else {
