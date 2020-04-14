@@ -61,7 +61,7 @@ tools.objToQuery = (obj) => {
 
 //Send order for charge through Stripe
 tools.charge = (chargeData, callback) => {
-    //Request stripe api to create a card
+    //Request stripe api to create a charge
     //Verify Data
     orderAmount = typeof(chargeData.amount) == 'number' && chargeData.amount > 0.50 ? chargeData.amount : false
     orderCard = typeof(chargeData.card) === 'string' && config.stripeInfo.card.indexOf(chargeData.card) > -1 ? chargeData.card.trim() : false;
@@ -78,8 +78,7 @@ tools.charge = (chargeData, callback) => {
 
         //raw http url to use on postman tests only
         let endpoint = `https://api.stripe.com/v1/charges/`;
-        var rawUrl = `${endpoint}${queryPayload}`;
-        console.log(rawUrl)
+        let rawUrl = `${endpoint}${queryPayload}`;
 
         //craft object to http.request
         const requestDetails = {
@@ -107,7 +106,12 @@ tools.charge = (chargeData, callback) => {
                     body += decoder.write(data);
                 });
                 res.on('end', () =>{
-                    callback(JSON.parse(body));
+                    let charge = JSON.parse(body);
+                    if(charge.paid == true){
+                        callback(true);
+                    } else {
+                        callback(false);
+                    }
                 });
             } else {
             callback('Status code returned was '+status);
