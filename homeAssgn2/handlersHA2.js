@@ -769,7 +769,7 @@ handlers._orders.post = (data, callback) => {
                 if(!err){
                     const email = shopData.user
                     //Verify if a given token belongs to current user in session and has not expired
-                    handlers._tokens.verifyUserToken(token, email, async (tokenIsValid) => {
+                    handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
                         if(tokenIsValid){
                             let order = {
                                 orderId : tools.createRandomString(20),
@@ -798,8 +798,8 @@ handlers._orders.post = (data, callback) => {
                                 })
                             }
                             order.amount = Math.round(order.amount).toFixed(2);
-                            await tools.charge(order, (confirmedPay) => {
-                                if(confirmedPay){
+                            tools.charge(order, (charge) => {
+                                if(charge){
                                     await tools.sendEmail(email, order, (confirmedReceipt) => {
                                         if(!err && confirmedReceipt){
                                             order.receiptEmail = confirmedReceipt;
