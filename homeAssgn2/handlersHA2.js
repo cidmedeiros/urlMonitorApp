@@ -625,7 +625,7 @@ handlers._shoppingcarts.get = (data, callback) => {
                 let email = cartData.user;
                  //Get the token from the headers
                 const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
-                //Verify if a given token id is currently valid and if the user owns the cart
+                //Verify if the given token id is currently valid and if the user owns the cart
                 if(token){
                     handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
                         if(tokenIsValid){
@@ -754,6 +754,7 @@ handlers.orders = (data, callback) => {
 //SubContainer for handler.uses subMethods
 handlers._orders = {};
 
+//Define Orders post submethod
 handlers._orders.post = (data, callback) => {
     /* Required data: shoppingCartId*/
     //check the incoming data
@@ -856,6 +857,51 @@ handlers._orders.post = (data, callback) => {
             callback(403, {'Error': 'Missing token in header, or token is invalid!'});
         }
     } else {
+        callback(400, {'Error':'Missing or invalid required field!'});
+    }
+}
+
+//Define Orders get submethod
+handlers._orders.get = (data, callback) => {
+    /* Required data: orderId*/
+    //check the incoming data
+    const orderId = typeof(data.queryStringObject.orderId) == 'string' && data.queryStringObject.orderId.length == 20 ? data.queryStringObject.orderId.trim() : false;
+
+    if(orderId){
+        //Get the token from the headers
+        const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+        if(token){
+            schreiber.read('tokens', token, (err, tokenData) =>{
+                let userEmail = tokenData.email;
+                //Verify if the given token id is currently valid
+                handlers._tokens.verifyUserToken(token, userEmail, (tokenIsValid) => {
+                    if(tokenIsValid){
+                        schreiber.read('users', userEmail, (err, userData) => {
+                            if(!err){
+                                if(userData.orders.indexOf(orderId) > -1){
+                                    schreiber.read('orders', orderId, (err, order) =>{
+                                        if(!err){
+                                            callback(200, order);
+                                        } else {
+                                            callback(500, {'Error':'Could not retrieve order\'s data!'})
+                                        }
+                                    });
+                                } else {
+                                    callback(403, {'Error': 'This orders does not belong to the current client!'})
+                                }
+                            } else{
+                                callback(500, {'Error':'Could not retrieve user\'s data!'});
+                            }
+                        });
+                    } else {
+                        callback(403, {'Error': 'Either the user does not exist, or the token is/has invalid/expired!'});
+                    }
+                });
+            });
+        } else {
+            callback(403, {'Error': 'Missing token in header, or token is invalid!'});
+        }
+    } else{
         callback(400, {'Error':'Missing or invalid required field!'});
     }
 }
