@@ -196,7 +196,7 @@ handlers._users.put = (data, callback) => {
 };
 
 /* Define users delete submethod -> it deletes a client. All the client's data can be deleted.
-Its orders dont't ge deleted for they remain in a separate data collection.
+Its orders don't get deleted for they remain in a separate data collection.
 Company policy is to keep all orders history for data-driven business decisions.
 After deletion, the client's orders can't be traced back to it, though. */
 handlers._users.delete = (data, callback) => {
