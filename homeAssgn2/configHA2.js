@@ -26,6 +26,14 @@ environments.production = {
     'httpsPort': 5001,
     'envName' : 'production',
     'hashingSecret': 'anotherVeryWeirdCreatureHere',
+    'stripeInfo':{
+        'stripeKey': '',
+        'card': ['tok_visa', 'tok_mastercard']
+    },
+    'mailGunInfo':{
+        'mailgunKey':'',
+        'from': ''
+    }
 }
 
 //Determine which environment was passed as a command-line argument

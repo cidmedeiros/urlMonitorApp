@@ -1,6 +1,4 @@
-/* 
-Hub for all the handlers
- */
+//Hub for all the handlers
 
 //Dependencies
 const schreiber = require('./schreiberHA2');
@@ -9,7 +7,7 @@ const config = require('./configHA2');
 //Define the handlers
 var handlers = {};
 
-//Users
+//Users function to handle all possible related http verbs
 handlers.users = (data, callback) => {
     const acceptableMethods = ['get','post','put','delete'];
     if(acceptableMethods.indexOf(data.method) > -1){
@@ -22,7 +20,7 @@ handlers.users = (data, callback) => {
 //SubContainer for handler.uses subMethods
 handlers._users = {};
 
-//Define users post submethod
+//Define users post submethod -> it creates a client
 handlers._users.post = (data, callback) => {
     /* Required Data: firstName, lastName, email, password, tosAgreement
        Optional Data: none
@@ -91,7 +89,7 @@ handlers._users.post = (data, callback) => {
     }
 };
 
-//Define users get submethod
+//Define users get submethod -> it looks up a client's data (personal data, all orders and current shopping cart state)
 handlers._users.get = (data, callback) => {
     /* Required data: email
        optional data: none
@@ -128,7 +126,7 @@ handlers._users.get = (data, callback) => {
     }
 };
 
-//Define users put submethod
+//Define users put submethod -> it updates the clients personal data
 handlers._users.put = (data, callback) => {
     /* Required data: email && at least one optional data
     optional data: firstName, lastName, streetAddress, password (at least one must be specified)
@@ -197,7 +195,10 @@ handlers._users.put = (data, callback) => {
     }
 };
 
-//Define users delete submethod
+/* Define users delete submethod -> it deletes a client. All the client's data can be deleted.
+Its orders dont't ge deleted for they remain in a separate data collection.
+Company policy is to keep all orders history for data-driven business decisions.
+After deletion, the client's orders can't be traced back to it, though. */
 handlers._users.delete = (data, callback) => {
     /* Required data: email
        optional data: none
@@ -274,7 +275,7 @@ handlers._users.delete = (data, callback) => {
     }
 };
 
-//Tokens
+//Tokens function to handle all possible related http verbs
 handlers.tokens = (data, callback) => {
     const acceptableMethods = ['get','post','put','delete'];
     if(acceptableMethods.indexOf(data.method) > -1){
@@ -287,7 +288,7 @@ handlers.tokens = (data, callback) => {
 //SubContainer for handler.tokens subMethods
 handlers._tokens = {};
 
-//Define tokens post submethod
+//Define tokens post submethod ->  it creates a session (logIn) 
 handlers._tokens.post = (data, callback) => {
     /* Required Data: email, password
        Optional Data: none
@@ -331,7 +332,8 @@ handlers._tokens.post = (data, callback) => {
     }
 };
 
-//Define tokens get submethod
+/* Define tokens get submethod -> to verify/validate a session.
+The auth token is used by the API several times in order to grant or deny access to specific data */
 handlers._tokens.get = (data, callback) => {
     /* Required data: id
        optional data: none */
@@ -366,7 +368,7 @@ handlers._tokens.get = (data, callback) => {
     }
 };
 
-//Define tokens put submethod
+//Define tokens put submethod ->  it extends a session for an active user
 handlers._tokens.put = (data, callback) => {  
     /* Required data: id, extend
        optional data: none
@@ -412,7 +414,7 @@ handlers._tokens.put = (data, callback) => {
     }
 };
 
-//Define tokens delete submethod
+//Define tokens delete submethod -> it end a session (logOut)
 handlers._tokens.delete = (data, callback) => {
     /* Required data: id
        optional data: none
@@ -449,7 +451,8 @@ handlers._tokens.delete = (data, callback) => {
     }
 };
 
-//Verify if a given token belongs to current user in session and has not expired
+/* Verify if a given token belongs to current user in session and has not expired.
+The auth token is used by the API several times in order to grant or deny access to specific data. */
 handlers._tokens.verifyUserToken = (token, email, callback) => {
     //lookup the token
     schreiber.read('tokens', token, (err, tokenData) => {
@@ -466,7 +469,8 @@ handlers._tokens.verifyUserToken = (token, email, callback) => {
     });
 };
 
-//Verify if a given token has not expired
+/* Verify if a given token has not expired.
+The auth token is used by the API several times in order to grant or deny access to specific data */
 handlers._tokens.verifyExpiredToken = (token, callback) => {
     //lookup the token
     schreiber.read('tokens', token, (err, tokenData) => {
@@ -483,7 +487,7 @@ handlers._tokens.verifyExpiredToken = (token, callback) => {
     });
 }
 
-//Define Menu routes
+//Define Menu function to handle all possible related http verbs
 handlers.menu = (data, callback) => {
     const acceptableMethods = ['get'];
     if(acceptableMethods.indexOf(data.method) > -1){
@@ -520,7 +524,8 @@ menu.desserts = {
 //SubContainer for handler.menu subMethods
 handlers._menu = {};
 
-//Define menu get submethod
+/* Define menu get submethod.
+Clients can only get menu information. They can not post or update the menu information. */
 handlers._menu.get = (data, callback) => {
      //Get the token from the headers
      const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
@@ -540,7 +545,7 @@ handlers._menu.get = (data, callback) => {
      }
 } 
 
-//ShoppingCart
+//ShoppingCart function to handle all possible related http verbs
 handlers.shoppingcarts = (data, callback) => {
     const acceptableMethods = ['get','post','put'];
     if(acceptableMethods.indexOf(data.method) > -1){
@@ -553,7 +558,9 @@ handlers.shoppingcarts = (data, callback) => {
 //SubContainer for handler.shoppingCart subMethods
 handlers._shoppingcarts = {};
 
-//Define shoppingCart post submethod
+/* Define shoppingCart post submethod.
+A unique shopping cart is created to each client when the client is first created.
+Client can not have more than one shopping cart. */
 handlers._shoppingcarts.post = (data, callback) => {
     /* Required Data: at least one variable from the menu (pizzas, drinks, desserts)
     Optional Data: none
@@ -611,7 +618,7 @@ handlers._shoppingcarts.post = (data, callback) => {
     });
 };
 
-//Define shoppingCart get submethod
+//Define shoppingCart get submethod -> it looks us up the current state of the shopping cart
 handlers._shoppingcarts.get = (data, callback) => {
     /* Required data: cartId
        optional data: none
@@ -647,6 +654,8 @@ handlers._shoppingcarts.get = (data, callback) => {
     }
 };
 
+/* Define shoppingCart put submethod -> it deletes or changes the items from the shopping cart.
+Clients can only update their own shopping carts. */
 handlers._shoppingcarts.put = (data, callback) => {
     /* Required data: itemId to be updated
        optional data: none
@@ -741,9 +750,10 @@ handlers._shoppingcarts.put = (data, callback) => {
     });
 };
 
-//Users
+/* Orders function to handle all possible related http verbs.
+Orders can not be deleted or changed. Company policy is to keep all orders history for data-driven business decisions. */
 handlers.orders = (data, callback) => {
-    const acceptableMethods = ['get','post','put','delete'];
+    const acceptableMethods = ['get','post'];
     if(acceptableMethods.indexOf(data.method) > -1){
         handlers._orders[data.method](data, callback);
     } else{
@@ -754,7 +764,9 @@ handlers.orders = (data, callback) => {
 //SubContainer for handler.uses subMethods
 handlers._orders = {};
 
-//Define Orders post submethod
+/* Define Orders post submethod -> it places an order.
+An order is composed of all items in the shopping cart.
+Although a placed order is saved on its own it gets linked to the issuing client.*/
 handlers._orders.post = (data, callback) => {
     /* Required data: shoppingCartId*/
     //check the incoming data
@@ -861,7 +873,7 @@ handlers._orders.post = (data, callback) => {
     }
 }
 
-//Define Orders get submethod
+//Define Orders get submethod -> it looks up an order
 handlers._orders.get = (data, callback) => {
     /* Required data: orderId*/
     //check the incoming data

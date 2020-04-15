@@ -1,4 +1,4 @@
-/* Library for storing and editing data */
+/* Library for storing, editing and deleting data */
 
 //Dependencies
 const fs = require('fs');

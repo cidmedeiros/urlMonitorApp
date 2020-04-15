@@ -1,4 +1,4 @@
-/* SERVER-related tasks */
+//SERVER-related tasks
 
 //Dependencies
 const https = require('https');
@@ -22,6 +22,7 @@ server.httpsServerOptions = {
     passphrase: 'somethingidontknow'
 };
 
+//It creates a https server
 server.httpsServer = https.createServer(server.httpsServerOptions,(req, res) => {
     server.unifiedServer(req, res);
 });

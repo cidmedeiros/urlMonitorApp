@@ -1,4 +1,4 @@
-/* Where all the helpers tools live */
+//Where all the helpers tools live
 
 //Dependencies
 const crypto = require('crypto');
@@ -53,13 +53,13 @@ tools.validateEmail = (email) => {
     return re.test(String(email).toLowerCase());
 }
 
-//queryfy objects
+//Queryfy objects -> it casts an object in a query of key-pair values structure.
 tools.objToQuery = (obj) => {
-    const query = Object.keys(obj).map( k => `${k}=${obj[k]}`).join("&");
+    const query = Object.keys(obj).map( key => `${key}=${obj[key]}`).join("&");
     return query.length > 0 ? `?${query}` : "";
 }
 
-//Send order for charge through Stripe
+//Charge an order through Stripe
 tools.charge = (chargeData, callback) => {
     //Request stripe api to create a charge
     //Verify Data
@@ -183,4 +183,5 @@ tools.sendEmail = (email, order, callback) => {
   
 };
 
+//Export tools
 module.exports = tools;
