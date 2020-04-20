@@ -3,8 +3,6 @@
  *
  */
 
-import { type } from "os";
-
 // Container for frontend application
 var app = {};
 
