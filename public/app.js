@@ -101,7 +101,7 @@ app.logUserOut = function(){
     var queryStringObject = {
         'id' : tokenId
     };
-    app.client.request(undefined,'api/tokens','DELETE',queryStringObject,undefined,function(statusCode,responsePayload){
+    app.client.request(undefined,'api/tokens','DELETE',queryStringObject,undefined,(statusCode,token) => {
         // Set the app.config token as false
         app.setSessionToken(false);
         // Send the user to the logged out page
@@ -111,7 +111,7 @@ app.logUserOut = function(){
 
 // Bind the forms
 app.bindForms = function(){
-    document.querySelector("form").addEventListener("submit", function(e) {
+    document.querySelector("form").addEventListener("submit", (e) => {
         // Stop it from submitting
         e.preventDefault();
         var formId = this.id;
