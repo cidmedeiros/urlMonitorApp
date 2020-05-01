@@ -14,7 +14,7 @@ app.config = {
 // AJAX Client (for RESTful API)
 app.client = {}
 
-// Interface for making API calls
+// Interface for making API calls using AJAX
 app.client.request = function(headers,path,method,queryStringObject,payload,callback){
 
   // Set defaults
@@ -40,7 +40,8 @@ app.client.request = function(headers,path,method,queryStringObject,payload,call
      }
   }
 
-  // Form the http request as a JSON type
+  // Form the http request as a JSON type using AJAX
+  // XMLHttpRequest ->  it's a built-in tools most web browsers have
   var xhr = new XMLHttpRequest();
   xhr.open(method, requestUrl, true);
   xhr.setRequestHeader("Content-type", "application/json");
@@ -57,29 +58,27 @@ app.client.request = function(headers,path,method,queryStringObject,payload,call
     xhr.setRequestHeader("token", app.config.sessionToken.id);
   }
 
-  // When the request comes back, handle the response
-  xhr.onreadystatechange = function() {
-      if(xhr.readyState == XMLHttpRequest.DONE) {
-        var statusCode = xhr.status;
-        var responseReturned = xhr.responseText;
-
-        // Callback if requested
-        if(callback){
-          try{
-            var parsedResponse = JSON.parse(responseReturned);
-            callback(statusCode,parsedResponse);
-          } catch(e){
-            callback(statusCode,false);
-          }
-
-        }
-      }
-  }
-
   // Send the payload as JSON
   var payloadString = JSON.stringify(payload);
   xhr.send(payloadString);
 
+   // When the request comes back, handle the response
+   xhr.onreadystatechange = function() {
+     if(xhr.readyState == XMLHttpRequest.DONE) {
+       var statusCode = xhr.status;
+       var responseReturned = xhr.responseText;
+
+       // Callback if requested
+       if(callback){
+         try{
+           var parsedResponse = JSON.parse(responseReturned);
+           callback(statusCode,parsedResponse);
+         } catch(e){
+           callback(statusCode,false);
+         }
+      }
+    }
+ }
 };
 
 // Bind the logout button
@@ -135,7 +134,6 @@ app.bindForms = function(){
         if(document.querySelector("#"+formId+" .formSuccess")){
           document.querySelector("#"+formId+" .formSuccess").style.display = 'none';
         }
-
 
         // Turn the inputs into a payload
         var payload = {};
