@@ -95,7 +95,10 @@ app.bindLogoutButton = function(){
 };
 
 // Log the user out then redirect them
-app.logUserOut = function(){
+app.logUserOut = function(redirectUser){
+  // Set redirectUser to default to true
+  redirectUser = typeof(redirectUser) == 'boolean' ? redirectUser : true;
+
   // Get the current token id
   var tokenId = typeof(app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
 
@@ -108,7 +111,9 @@ app.logUserOut = function(){
     app.setSessionToken(false);
 
     // Send the user to the logged out page
-    window.location = '/session/deleted';
+    if(redirectUser){
+      window.location = '/session/deleted';
+    }
 
   });
 };
@@ -134,7 +139,6 @@ app.bindForms = function(){
         if(document.querySelector("#"+formId+" .formSuccess")){
           document.querySelector("#"+formId+" .formSuccess").style.display = 'none';
         }
-
         // Turn the inputs into a payload
         var payload = {};
         var elements = this.elements;
@@ -149,18 +153,18 @@ app.bindForms = function(){
 
           }
         }
+        // If the method is DELETE, the payload should be a queryStringObject instead
+        var queryStringObject = method == 'DELETE' ? payload : {};
 
         // Call the API
-        app.client.request(undefined,path,method,undefined,payload,function(statusCode,responsePayload){
+        app.client.request(undefined,path,method,queryStringObject,payload,function(statusCode,responsePayload){
           // Display an error on the form if needed
           if(statusCode !== 200){
-
             if(statusCode == 403){
               // log the user out
               app.logUserOut();
 
             } else {
-
               // Try to get the error from the api, or set a default error message
               var error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
 
@@ -174,7 +178,6 @@ app.bindForms = function(){
             // If successful, send to form response processor
             app.formResponseProcessor(formId,payload,responsePayload);
           }
-
         });
       });
     }
@@ -219,6 +222,12 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   var formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
   if(formsWithSuccessMessages.indexOf(formId) > -1){
     document.querySelector("#"+formId+" .formSuccess").style.display = 'block';
+  }
+
+  // If the user just deleted their account, redirect them to the account-delete page
+  if(formId == 'accountEdit3'){
+    app.logUserOut(false);
+    window.location = '/account/deleted';
   }
 
 };
