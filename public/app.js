@@ -15,7 +15,8 @@ app.config = {
 app.client = {}
 
 // Interface for making API calls
-app.client.request = (headers,path,method,queryStringObject,payload,callback) => {
+app.client.request = function(headers,path,method,queryStringObject,payload,callback){
+
   // Set defaults
   headers = typeof(headers) == 'object' && headers !== null ? headers : {};
   path = typeof(path) == 'string' ? path : '/';
@@ -61,6 +62,7 @@ app.client.request = (headers,path,method,queryStringObject,payload,callback) =>
       if(xhr.readyState == XMLHttpRequest.DONE) {
         var statusCode = xhr.status;
         var responseReturned = xhr.responseText;
+
         // Callback if requested
         if(callback){
           try{
@@ -69,9 +71,10 @@ app.client.request = (headers,path,method,queryStringObject,payload,callback) =>
           } catch(e){
             callback(statusCode,false);
           }
+
         }
-    }
-}
+      }
+  }
 
   // Send the payload as JSON
   var payloadString = JSON.stringify(payload);
@@ -81,28 +84,34 @@ app.client.request = (headers,path,method,queryStringObject,payload,callback) =>
 
 // Bind the logout button
 app.bindLogoutButton = function(){
-    document.getElementById("logoutButton").addEventListener("click", function(e){
-      // Stop it from redirecting anywhere
-      e.preventDefault();
-      // Log the user out
-      app.logUserOut();
-    });
+  document.getElementById("logoutButton").addEventListener("click", function(e){
+
+    // Stop it from redirecting anywhere
+    e.preventDefault();
+
+    // Log the user out
+    app.logUserOut();
+
+  });
 };
-  
+
 // Log the user out then redirect them
- app.logUserOut = function(){
-     // Get the current token id
-     var tokenId = typeof(app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
-    // Send the current token to the tokens endpoint to delete it
-    var queryStringObject = {
-      'id' : tokenId
-    };
-    app.client.request(undefined,'api/tokens','DELETE',queryStringObject,undefined, (statusCode,responsePayload) => {
-      // Set the app.config token as false
-      app.setSessionToken(false);
-      // Send the user to the logged out page
-      window.location = 'session/deleted';
-    });
+app.logUserOut = function(){
+  // Get the current token id
+  var tokenId = typeof(app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
+
+  // Send the current token to the tokens endpoint to delete it
+  var queryStringObject = {
+    'id' : tokenId
+  };
+  app.client.request(undefined,'api/tokens','DELETE',queryStringObject,undefined,function(statusCode,responsePayload){
+    // Set the app.config token as false
+    app.setSessionToken(false);
+
+    // Send the user to the logged out page
+    window.location = '/session/deleted';
+
+  });
 };
 
 // Bind the forms
@@ -130,30 +139,37 @@ app.bindForms = function(){
       }
 
       // Call the API
-      app.client.request(undefined,path,method,undefined,payload, (statusCode,responsePayload)=> {
+      app.client.request(undefined,path,method,undefined,payload,function(statusCode,responsePayload){
         // Display an error on the form if needed
         if(statusCode !== 200){
 
-          // Try to get the error from the api, or set a default error message
-          var error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
+          if(statusCode == 403){
+            // log the user out
+            app.logUserOut();
+            
+          } else {
 
-          // Set the formError field with the error text
-          document.querySelector("#"+formId+" .formError").innerHTML = error;
+            // Try to get the error from the api, or set a default error message
+            var error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
 
-          // Show (unhide) the form error field on the form
-          document.querySelector("#"+formId+" .formError").style.display = 'block';
+            // Set the formError field with the error text
+            document.querySelector("#"+formId+" .formError").innerHTML = error;
 
+            // Show (unhide) the form error field on the form
+            document.querySelector("#"+formId+" .formError").style.display = 'block';
+          }
         } else {
           // If successful, send to form response processor
           app.formResponseProcessor(formId,payload,responsePayload);
         }
+
       });
     });
   }
 };
 
 // Form response processor
-app.formResponseProcessor = (formId,requestPayload,responsePayload) => {
+app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   var functionToCall = false;
   // If account creation was successful, try to immediately log the user in
   if(formId == 'accountCreate'){
@@ -163,7 +179,7 @@ app.formResponseProcessor = (formId,requestPayload,responsePayload) => {
       'password' : requestPayload.password
     };
 
-    app.client.request(undefined,'api/tokens','POST',undefined,newPayload, (newStatusCode,newResponsePayload) => {
+    app.client.request(undefined,'api/tokens','POST',undefined,newPayload,function(newStatusCode,newResponsePayload){
       // Display an error on the form if needed
       if(newStatusCode !== 200){
 
@@ -207,7 +223,7 @@ app.getSessionToken = function(){
 };
 
 // Set (or remove) the loggedIn class from the body
-app.setLoggedInClass = (add) => {
+app.setLoggedInClass = function(add){
   var target = document.querySelector("body");
   if(add){
     target.classList.add('loggedIn');
@@ -217,17 +233,13 @@ app.setLoggedInClass = (add) => {
 };
 
 // Set the session token in the app.config object as well as localstorage
-app.setSessionToken = (token) => {
-  if(token){
-    app.config.sessionToken = token;
-    var tokenString = JSON.stringify(token);
-    localStorage.setItem('token',tokenString);
-    if(typeof(token) == 'object'){
-      app.setLoggedInClass(true);
-    }
-  }
-  else {
-    app.config.sessionToken = false;
+app.setSessionToken = function(token){
+  app.config.sessionToken = token;
+  var tokenString = JSON.stringify(token);
+  localStorage.setItem('token',tokenString);
+  if(typeof(token) == 'object'){
+    app.setLoggedInClass(true);
+  } else {
     app.setLoggedInClass(false);
   }
 };
@@ -241,15 +253,15 @@ app.renewToken = function(callback){
       'id' : currentToken.id,
       'extend' : true,
     };
-    app.client.request(undefined,'api/tokens','PUT',undefined,payload, (statusCode,responsePayload) => {
+    app.client.request(undefined,'api/tokens','PUT',undefined,payload,function(statusCode,responsePayload){
       // Display an error on the form if needed
       if(statusCode == 200){
         // Get the new token details
         var queryStringObject = {'id' : currentToken.id};
-        app.client.request(undefined,'api/tokens','GET',queryStringObject,undefined,(statusCode,token) =>{
+        app.client.request(undefined,'api/tokens','GET',queryStringObject,undefined,function(statusCode,responsePayload){
           // Display an error on the form if needed
           if(statusCode == 200){
-            app.setSessionToken(token);
+            app.setSessionToken(responsePayload);
             callback(false);
           } else {
             app.setSessionToken(false);
@@ -270,7 +282,7 @@ app.renewToken = function(callback){
 // Loop to renew token often
 app.tokenRenewalLoop = function(){
   setInterval(function(){
-    app.renewToken( (err) => {
+    app.renewToken(function(err){
       if(!err){
         console.log("Token renewed successfully @ "+Date.now());
       }
@@ -283,6 +295,9 @@ app.init = function(){
 
   // Bind all form submissions
   app.bindForms();
+
+  // Bind logout logout button
+  app.bindLogoutButton();
 
   // Get the token from localstorage
   app.getSessionToken();
