@@ -237,7 +237,7 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   // If login was successful, set the token in localstorage and redirect the user
   if(formId == 'sessionCreate'){
     app.setSessionToken(responsePayload);
-    window.location = 'checks/all';
+    window.location = '/checks/all';
   }
 
   // If forms saved successfully and they have success messages, show them
@@ -254,7 +254,7 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
 
   // If the user just created a new check successfully, redirect back to the dashboard
   if(formId == 'checksCreate'){
-    window.location = 'checks/all';
+    window.location = '/checks/all';
   }
 };
 
@@ -376,9 +376,6 @@ app.loadAccountEditPage = function(){
   } else {
     app.logUserOut();
   }
-
-
-
 };
 
 // Loop to renew token often
