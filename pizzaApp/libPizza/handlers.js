@@ -1,11 +1,211 @@
+
 //Hub for all the handlers
 
 //Dependencies
 const schreiber = require('./schreiberHA2');
 const tools = require('./toolsHA2');
 const config = require('./configHA2');
+
 //Define the handlers
 var handlers = {};
+
+/*
+    **HTML API HANDLERS
+ */
+
+ //Index Handler
+ handlers.index = (data, callback) => {
+    // Reject any request that isn't a GET
+    if(data.method == 'get'){
+        //Prepate data for interpolation
+        let templateData = {
+            'head.title' : 'Pizza Delivery - Made Simple',
+            'head.description': 'We offer delicious pizzas, and fast deliveries',
+            'body.class': 'index'
+        }
+        //Read in a template as a string
+        tools.getTemplate('index', templateData,(err, str) =>{
+            if(!err && str){
+                tools.addUniversalTemplates(str, templateData, (err, fullString) => {
+                    if(!err && fullString){
+                        callback(200, fullString, 'html');
+                    } else {
+                        callback(500, undefined, 'html');
+                    }
+                });
+            } else {
+                callback(500, undefined, 'html');
+            }
+        });
+    } else {
+        callback(405, undefined, 'html');
+    }
+};
+
+//Create a session
+handlers.sessionCreate = (data,callback) => {
+    // Reject any request that isn't a GET
+    if(data.method == 'get'){
+      // Prepare data for interpolation
+      var templateData = {
+        'head.title' : 'Login to your Account',
+        'head.description' : 'Please enter your phone number and password to access your account.',
+        'body.class' : 'sessionCreate'
+      };
+      // Read in a template as a string
+      tools.getTemplate('sessionCreate',templateData, (err,str)=> {
+        if(!err && str){
+          // Add the universal header and footer
+          tools.addUniversalTemplates(str,templateData, (err,str) => {
+            if(!err && str){
+              // Return that page as HTML
+              callback(200,str,'html');
+            } else {
+              callback(500,undefined,'html');
+            }
+          });
+        } else {
+          callback(500,undefined,'html');
+        }
+      });
+    } else {
+      callback(405,undefined,'html');
+    }
+};
+
+// Edit Your Account
+handlers.accountEdit = (data,callback) => {
+    // Reject any request that isn't a GET
+    if(data.method == 'get'){
+      // Prepare data for interpolation
+      //This is a protected page, so no metadata for head description in order to avois web scrappers
+      var templateData = {
+        'head.title' : 'Account Settings',
+        'body.class' : 'accountEdit'
+      };
+      // Read in a template as a string
+      tools.getTemplate('accountEdit',templateData, (err,str) => {
+        if(!err && str){
+          // Add the universal header and footer
+          tools.addUniversalTemplates(str,templateData, (err,str) => {
+            if(!err && str){
+              // Return that page as HTML
+              callback(200,str,'html');
+            } else {
+              callback(500,undefined,'html');
+            }
+          });
+        } else {
+          callback(500,undefined,'html');
+        }
+      });
+    } else {
+      callback(405,undefined,'html');
+    }
+  };
+
+// Session has been deleted
+handlers.sessionDeleted = (data,callback) => {
+    // Reject any request that isn't a GET
+    if(data.method == 'get'){
+      // Prepare data for interpolation
+      var templateData = {
+        'head.title' : 'Logged Out',
+        'head.description' : 'You have been logged out of your account.',
+        'body.class' : 'sessionDeleted'
+      };
+      // Read in a template as a string
+      tools.getTemplate('sessionDeleted',templateData, (err,str) => {
+        if(!err && str){
+          // Add the universal header and footer
+          tools.addUniversalTemplates(str,templateData, (err,str) => {
+            if(!err && str){
+              // Return that page as HTML
+              callback(200,str,'html');
+            } else {
+              callback(500,undefined,'html');
+            }
+          });
+        } else {
+          callback(500,undefined,'html');
+        }
+      });
+    } else {
+      callback(405,undefined,'html');
+    }
+};
+
+// Account has been deleted
+handlers.accountDeleted = (data,callback) => {
+    // Reject any request that isn't a GET
+    if(data.method == 'get'){
+      // Prepare data for interpolation
+      var templateData = {
+        'head.title' : 'Account Deleted',
+        'head.description' : 'Your account has been deleted.',
+        'body.class' : 'accountDeleted'
+      };
+      // Read in a template as a string
+      tools.getTemplate('accountDeleted',templateData, (err,str) => {
+        if(!err && str){
+          // Add the universal header and footer
+          tools.addUniversalTemplates(str,templateData, (err,str) => {
+            if(!err && str){
+              // Return that page as HTML
+              callback(200,str,'html');
+            } else {
+              callback(500,undefined,'html');
+            }
+          });
+        } else {
+          callback(500,undefined,'html');
+        }
+      });
+    } else {
+      callback(405,undefined,'html');
+    }
+};
+
+//Public assets
+handlers.public = (data, callback) => {
+    //Reject any request that isn't a GET
+    if(data.method == 'get'){
+        //Get the file name being requested
+        let trimmedAssetName = data.trimmedPath.replace('public/', '').trim();
+        if(trimmedAssetName.length > 0){
+            //Read in the asset's data
+            tools.getStaticAsset(trimmedAssetName, (err, data) => {
+                if(!err && data){
+                    //Determine the content type (default to plain text)
+                    let contentType = 'plain';
+                    if(trimmedAssetName.indexOf('.css') > -1){
+                        contentType = 'css';
+                    }
+                    if(trimmedAssetName.indexOf('.png') > -1){
+                        contentType = 'png';
+                    }
+                    if(trimmedAssetName.indexOf('.jpg') > -1){
+                        contentType = 'jpg';
+                    }
+                    if(trimmedAssetName.indexOf('.ico') > -1){
+                        contentType = 'favicon';
+                    }
+                    callback(200, data, contentType);
+                } else {
+                    callback(404);
+                }
+            });
+        }
+    } else {
+        callback(405);
+    }
+};
+
+/*
+    **JSON API HANDLERS
+ */
+
+//Users
 
 //Users function to handle all possible related http verbs
 handlers.users = (data, callback) => {
@@ -917,12 +1117,6 @@ handlers._orders.get = (data, callback) => {
         callback(400, {'Error':'Missing or invalid required field!'});
     }
 }
-
-//Ping Handler
-handlers.ping = (data, callback) => {
-    //route to inform the requestee that the app is alive
-    callback(200);
-};
 
 //Not found handler
 handlers.notFound = (data, callback) => {
