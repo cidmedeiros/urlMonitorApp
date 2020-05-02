@@ -6,6 +6,8 @@ const config = require('./configHA2');
 const https = require('https');
 const StringDecoder = require('string_decoder').StringDecoder;
 const querystring = require('querystring');
+const path = require('path');
+const fs = require('fs');
 
 //Container for all the helper functions
 tools = {};
@@ -181,6 +183,86 @@ tools.sendEmail = (email, order, callback) => {
       callback('The e-mail provided is not of a valid format.');
     }
   
+};
+
+//Get templates
+tools.getTemplate = (templateName, data, callback) => {
+    templateName = typeof(templateName) == 'string' ? templateName : false;
+    data = typeof(data) == 'object' && data !== null ? data : {};
+    if(templateName){
+        let templatesDir = path.join(__dirname, '/../templates/');
+        fs.readFile(templatesDir+templateName+'.html', 'utf8', (err, str) => {
+            if(!err && str.length > 0){
+                //do interpolation on the string
+                let finalString = tools.interpolate(str, data);
+                callback(false, finalString);
+            } else {
+                callback('No template could be found!')
+            }
+        });
+    } else {
+        callback('A valid template was not specified!');
+    }
+};
+
+//Add the global header and footer to a string, and pass provided data object to the header and footer for interpolation
+tools.addUniversalTemplates = (str, data, callback) => {
+    str = typeof(str) == 'string' && str.length > 0 ? str : ''; //main html page
+    data = typeof(data) == 'object' && data !== null ? data : {};
+    //Get the header
+    tools.getTemplate('_header', data, (err, headerString) => {
+        if(!err && headerString){
+            //Get the footer
+            tools.getTemplate('_footer', data, (err, footerString) => {
+                if(!err, footerString){
+                    let fullString = headerString+str+footerString; //concatenate html
+                    callback(false, fullString);
+                } else {
+                    callback('Could not find the footer template');
+                }
+            });
+        } else {
+            callback('Could not find the header template');
+        }
+    })
+};
+
+//Add the data specific and global data to html templates
+tools.interpolate = (str, data) => {
+    str = typeof(str) == 'string' && str.length > 0 ? str : '';
+    data = typeof(data) == 'object' && data !== null ? data : {};
+    //Add the templateGlobals to the data object, prepending their key name with "global"
+    for(var keyName in config.templateGlobals){
+        if(config.templateGlobals.hasOwnProperty(keyName)){
+            data['global.'+keyName] = config.templateGlobals[keyName];
+        }
+    }
+    //For each key in the data object, insert its value into the string at the corresponding placeholder
+    for(var key in data){
+        if(data.hasOwnProperty(key) && typeof(data[key] == 'string')){
+            let replace = data[key];
+            let find = '{'+key+'}';
+            str = str.replace(find, replace);
+        }
+    }
+    return str;
+};
+
+// Get the contents of a static (public) asset
+tools.getStaticAsset = (fileName,callback) => {
+    fileName = typeof(fileName) == 'string' && fileName.length > 0 ? fileName : false;
+    if(fileName){
+      var publicDir = path.join(__dirname,'/../public/');
+      fs.readFile(publicDir+fileName, function(err,data){
+        if(!err && data){
+          callback(false,data);
+        } else {
+          callback('No file could be found');
+        }
+      });
+    } else {
+      callback('A valid file name was not specified');
+    }
 };
 
 //Export tools
