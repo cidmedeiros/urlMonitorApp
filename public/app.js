@@ -498,11 +498,11 @@ app.loadChecksEditPage = function(){
         }
       } else {
         // If the request comes back as something other than 200, redirect back to dashboard
-        window.location = '/checks/all';
+        window.location = 'checks/all';
       }
     });
   } else {
-    window.location = '/checks/all';
+    window.location = 'checks/all';
   }
 };
 
