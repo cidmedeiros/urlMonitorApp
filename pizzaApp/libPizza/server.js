@@ -84,7 +84,7 @@ server.unifiedServer = (req, res) => {
             //use the handler statusCode or default to 200
             statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
 
-            //Return the response-parts that are content-specific
+            //Return the response-parts that are content-specific (sets header and payloads the content)
             var handlerPayloadString = ''
             if(contentType == 'json'){
                 res.setHeader('Content-Type', 'application/json');
@@ -161,6 +161,8 @@ server.router = {
     'api/shoppingcarts' : handlers.shoppingcarts,
     'api/menu': handlers.menu,
     'api/orders': handlers.orders,
+    'favicon.ico': handlers.favicon,
+    'public': handlers.public
 };
 
 //Define server init function
