@@ -14,3 +14,6 @@ app.init = () => {
 
 //Execute
 app.init();
+
+//Export the app
+module.exports = app;

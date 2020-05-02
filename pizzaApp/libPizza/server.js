@@ -60,10 +60,6 @@ server.unifiedServer = (req, res) => {
         //cuts off data stream
         buffer += decoder.end();
 
-        //Verifies the handler (function defined in the handlers file) this request should go to.
-        //If one is not found, it should go to notFound handler.
-        let chosenhandler = typeof(server.router[trimmedPath]) !== 'undefined' ? server.router[trimmedPath] : handlers.notFound;  
-
         //construct the data object to send to the chosenhandler
         let data = {
             'trimmedPath': trimmedPath,
@@ -73,19 +69,68 @@ server.unifiedServer = (req, res) => {
             'payload': tools.parseJsonToObject(buffer) //make sure the incoming data is an Object
         }
 
+        //Verifies the handler (function defined in the handlers file) this request should go to.
+        //If one is not found, it should go to notFound handler.
+        let chosenhandler = typeof(server.router[trimmedPath]) !== 'undefined' ? server.router[trimmedPath] : handlers.notFound;
+        
+        //if the request is within the public directory, use the public handler instead
+        chosenhandler = trimmedPath.indexOf('public/') > -1 ? handlers.public : chosenhandler;
+
         //setting up a GENERAL router to route the request to the handlers
-        chosenhandler(data, (statusCode, handlerPayload) => {
+        chosenhandler(data, (statusCode, handlerPayload, contentType) => {
+            //Determine the type of response (fallback to JSON)
+            contentType = typeof(contentType) == 'string' ? contentType : 'json';
+
             //use the handler statusCode or default to 200
             statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
 
-            //use the handler payload object if any or default to {}
-            handlerPayload = typeof(data.payload) == 'object' ? handlerPayload : {};
+            //Return the response-parts that are content-specific
+            var handlerPayloadString = ''
+            if(contentType == 'json'){
+                res.setHeader('Content-Type', 'application/json');
+                //use the handler payload object if any or default to {}
+                handlerPayload = typeof(handlerPayload) == 'object' ? handlerPayload : {};
+                //convert the handlerPayload to String
+                handlerPayloadString = JSON.stringify(handlerPayload);
+            }
+            if(contentType == 'html'){
+                res.setHeader('Content-Type', 'text/html');
+                handlerPayload = typeof(handlerPayload) == 'string' ? handlerPayload : '';
+                //Use the universal default variable
+                handlerPayloadString = handlerPayload;
+            }
+            if(contentType == 'css'){
+                res.setHeader('Content-Type', 'text/css');
+                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+                //Use the universal default variable
+                handlerPayloadString = handlerPayload;
+            }
+            if(contentType == 'favicon'){
+                res.setHeader('Content-Type', 'image/x-icon');
+                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+                //Use the universal default variable
+                handlerPayloadString = handlerPayload;
+            }
+            if(contentType == 'png'){
+                res.setHeader('Content-Type', 'image/png');
+                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+                //Use the universal default variable
+                handlerPayloadString = handlerPayload;
+            }
+            if(contentType == 'jpg'){
+                res.setHeader('Content-Type', 'image/jpeg');
+                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+                //Use the universal default variable
+                handlerPayloadString = handlerPayload;
+            }
+            if(contentType == 'plain'){
+                res.setHeader('Content-Type', 'text/plain');
+                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+                //Use the universal default variable
+                handlerPayloadString = handlerPayload;
+            }
 
-            //convert the handlerPayload to String to be sent to the user
-            let handlerPayloadString = JSON.stringify(handlerPayload);
-
-            //Return the responses
-            res.setHeader('Content-Type','application/json');
+            //Return the response-parts that are common
             res.writeHead(statusCode);
             res.end(handlerPayloadString);
 
@@ -95,18 +140,27 @@ server.unifiedServer = (req, res) => {
             } else {
                 debug('\x1b[31m%s\x1b[0m',`${method.toUpperCase()} /${trimmedPath} ${statusCode}}`);
             }
-        })
+        });
     });
 };
 
 //Define a request router
 server.router = {
-    'ping': handlers.ping,
-    'users': handlers.users,
-    'tokens' : handlers.tokens,
-    'shoppingcarts' : handlers.shoppingcarts,
-    'menu': handlers.menu,
-    'orders': handlers.orders,
+    '': handlers.index,
+    'account/create': handlers.accountCreate,
+    'account/edit': handlers.accountEdit,
+    'account/deleted': handlers.accountDeleted,
+    'session/create': handlers.sessionCreate,
+    'session/deleted': handlers.sessionDeleted,
+    'menu': handlers.menuPage,
+    'shoppingcarts/all': handlers.shoppingItems,
+    'shoppingcarts/edit': handlers.shoppingEdit,
+    'orders/all': handlers.ordersList,
+    'api/users': handlers.users,
+    'api/tokens' : handlers.tokens,
+    'api/shoppingcarts' : handlers.shoppingcarts,
+    'api/menu': handlers.menu,
+    'api/orders': handlers.orders,
 };
 
 //Define server init function
