@@ -224,6 +224,7 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
       'password' : requestPayload.password
     };
 
+    //Actually creating the token to log the new user in
     app.client.request(undefined,'api/tokens','POST',undefined,newPayload,function(newStatusCode,newResponsePayload){
       // Display an error to the user if the request status IS NOT 200
       if(newStatusCode !== 200){
@@ -242,13 +243,14 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
       }
     });
   }
-  // If login was successful, set the token in localstorage and redirect the user
+
+  // If regular login is successful, set the token in localstorage and redirect the user
   if(formId == 'sessionCreate'){
     app.setSessionToken(responsePayload);
     window.location = 'menu';
   }
 
-  // If forms saved successfully and they have success messages, show them
+  // If forms saved successfully, and they have success messages, show them
   var formsWithSuccessMessages = ['accountEdit1', 'accountEdit2','itemEdit'];
   if(formsWithSuccessMessages.indexOf(formId) > -1){
     document.querySelector("#"+formId+" .formSuccess").style.display = 'block';
@@ -257,7 +259,7 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   // If the user just deleted their account, redirect them to the account-delete page
   if(formId == 'accountEdit3'){
     app.logUserOut(false);
-    window.location = '/account/deleted';
+    window.location = 'account/deleted';
   }
 
   // If the user just created a new order successfully, redirect back to the ordersList
