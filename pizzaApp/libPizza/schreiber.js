@@ -3,7 +3,7 @@
 //Dependencies
 const fs = require('fs');
 const path = require('path');
-const tools = require('./toolsHA2');
+const tools = require('./tools');
 
 //Container for the module (to be exported)
 let schreiber = {};

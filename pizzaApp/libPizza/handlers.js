@@ -2,9 +2,9 @@
 //Hub for all the handlers
 
 //Dependencies
-const schreiber = require('./schreiberHA2');
-const tools = require('./toolsHA2');
-const config = require('./configHA2');
+const schreiber = require('./schreiber');
+const tools = require('./tools');
+const config = require('./config');
 
 //Define the handlers
 var handlers = {};

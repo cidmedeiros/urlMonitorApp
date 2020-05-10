@@ -8,7 +8,7 @@ let environments = {}
 
 //define the staging enviroment (default)
 environments.staging = {
-    'httpsPort': 3001,
+    'httpsPort': 3000,
     'envName' : 'staging',
     'hashingSecret': 'aVeryWeirdCreatureHere',
     'stripeInfo':{

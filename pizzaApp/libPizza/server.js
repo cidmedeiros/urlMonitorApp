@@ -4,21 +4,21 @@
 const https = require('https');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
-const config = require('./configHA2');
+const config = require('./config');
 const fs = require('fs');
-const handlers = require('./handlersHA2');
-const tools = require('./toolsHA2');
+const handlers = require('./handlers');
+const tools = require('./tools');
 const path = require('path');
 const util = require('util');
-const debug = util.debuglog('server'); //to monitor the server module -> NODE_DEBUG=server node index.js
+const debug = util.debuglog('server');//to monitor the server module -> NODE_DEBUG=server node index.js
 
 //Instantiate the server module object
 var server = {};
 
 //Instantiate HTTPS server
 server.httpsServerOptions = {
-    'key': fs.readFileSync(path.join(__dirname,'/../https/key.pem')),
-    'cert': fs.readFileSync(path.join(__dirname,'/../https/cert.pem')),
+    'key': fs.readFileSync(path.join(__dirname,'../../https/key.pem')),
+    'cert': fs.readFileSync(path.join(__dirname,'/../../https/cert.pem')),
     passphrase: 'somethingidontknow'
 };
 

@@ -2,7 +2,7 @@
 
 //Dependencies
 const crypto = require('crypto');
-const config = require('./configHA2');
+const config = require('./config');
 const https = require('https');
 const StringDecoder = require('string_decoder').StringDecoder;
 const querystring = require('querystring');
