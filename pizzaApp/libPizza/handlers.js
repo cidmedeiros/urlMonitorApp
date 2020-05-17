@@ -1,10 +1,11 @@
+/* 
+Hub for all the handlers
+*/
 
-//Hub for all the handlers
-
-//Dependencies
-const schreiber = require('./schreiber');
-const tools = require('./tools');
-const config = require('./config');
+ //Dependencies
+ const schreiber = require('./schreiber');
+ const tools = require('./tools');
+ const config = require('./config');
 
 //Define the handlers
 var handlers = {};
@@ -42,18 +43,18 @@ var handlers = {};
     }
 };
 
-//Create a session
-handlers.sessionCreate = (data,callback) => {
+// Create Account
+handlers.accountCreate = (data,callback) => {
     // Reject any request that isn't a GET
     if(data.method == 'get'){
       // Prepare data for interpolation
       var templateData = {
-        'head.title' : 'Login to your Account',
-        'head.description' : 'Please enter your phone number and password to access your account.',
-        'body.class' : 'sessionCreate'
+        'head.title' : 'Create an Account',
+        'head.description' : 'Signup is easy and only takes a few seconds.',
+        'body.class' : 'accountCreate'
       };
       // Read in a template as a string
-      tools.getTemplate('sessionCreate',templateData, (err,str)=> {
+      tools.getTemplate('accountCreate',templateData, (err,str)=> {
         if(!err && str){
           // Add the universal header and footer
           tools.addUniversalTemplates(str,templateData, (err,str) => {
@@ -73,18 +74,18 @@ handlers.sessionCreate = (data,callback) => {
     }
 };
 
-// Create Account
-handlers.accountCreate = (data,callback) => {
+//Create a session
+handlers.sessionCreate = (data,callback) => {
     // Reject any request that isn't a GET
     if(data.method == 'get'){
       // Prepare data for interpolation
       var templateData = {
-        'head.title' : 'Create an Account',
-        'head.description' : 'Signup is easy and only takes a few seconds.',
-        'body.class' : 'accountCreate'
+        'head.title' : 'Login to your Account',
+        'head.description' : 'Please enter your phone number and password to access your account.',
+        'body.class' : 'sessionCreate'
       };
       // Read in a template as a string
-      tools.getTemplate('accountCreate',templateData, (err,str)=> {
+      tools.getTemplate('sessionCreate',templateData, (err,str)=> {
         if(!err && str){
           // Add the universal header and footer
           tools.addUniversalTemplates(str,templateData, (err,str) => {
@@ -194,6 +195,23 @@ handlers.accountDeleted = (data,callback) => {
       });
     } else {
       callback(405,undefined,'html');
+    }
+};
+
+//Route to get icons
+handlers.favicon = (data, callback) => {
+    //Reject any request that isn't a GET
+    if(data.method == 'get'){
+        //Read in favicon data
+        tools.getStaticAsset('favicon.ico', (err, data) => {
+            if(!err && data){
+                callback(200, data, 'favicon');
+            } else {
+                callback(500);
+            }
+        });
+    } else {
+        callback(405);
     }
 };
 
