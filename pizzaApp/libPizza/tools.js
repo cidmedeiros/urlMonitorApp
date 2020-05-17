@@ -1,4 +1,4 @@
-//Where all the helpers tools live
+/* Where all the helpers tools live */
 
 //Dependencies
 const crypto = require('crypto');
@@ -215,7 +215,7 @@ tools.addUniversalTemplates = (str, data, callback) => {
             //Get the footer
             tools.getTemplate('_footer', data, (err, footerString) => {
                 if(!err, footerString){
-                    let fullString = headerString+str+footerString; //concatenate html
+                    let fullString = headerString+str+footerString;
                     callback(false, fullString);
                 } else {
                     callback('Could not find the footer template');
