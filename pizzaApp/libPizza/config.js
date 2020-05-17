@@ -18,6 +18,12 @@ environments.staging = {
     'mailGunInfo':{
         'mailgunKey':'',
         'from': ''
+    },
+    'templateGlobals':{
+        'appName': 'Pizza Fast',
+        'companyName': 'Pizza Fast',
+        'yearCreated': 2020,
+        'baseUrl': 'https://localhost:3000'
     }
 };
 
@@ -33,6 +39,12 @@ environments.production = {
     'mailGunInfo':{
         'mailgunKey':'',
         'from': ''
+    },
+    'templateGlobals':{
+        'appName': 'Pizza Fast',
+        'companyName': 'Pizza Fast',
+        'yearCreated': 2020,
+        'baseUrl': 'https://localhost:3000'
     }
 }
 
