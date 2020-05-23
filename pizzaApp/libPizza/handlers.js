@@ -281,7 +281,6 @@ handlers._users.post = (data, callback) => {
     const streetAddress = typeof(data.payload.streetAddress) == 'string' && data.payload.streetAddress.trim().length > 0 ? data.payload.streetAddress.trim() : false;
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
     const tosAgreement = typeof(data.payload.tosAgreement) == 'boolean' && data.payload.tosAgreement == true ? data.payload.tosAgreement : false;
-
     if(firstName && lastName && streetAddress && email && password && tosAgreement){
         //Make sure the user doesn't already exists
         schreiber.read('users', email, (err, data) => {
@@ -301,9 +300,10 @@ handlers._users.post = (data, callback) => {
                         'shoppingCart': cartId,
                         'orders': [],
                     }
+                    console.log(userData);
                     //Save User file
-                    schreiber.create('users', email, userData, (err) => {
-                        if(!err || err == 200){
+                    schreiber.create('users', email, userData, (err, fileDescriptor) => {
+                        if(!err && fileDescriptor){
                             //Create User's unique Shopping Cart
                             cartObject = {
                                 'cartId': cartId,
@@ -312,18 +312,17 @@ handlers._users.post = (data, callback) => {
                                 'drinks': [],
                                 'desserts': []
                             }
-                            schreiber.create('shoppingCarts', cartId, cartObject, (err) => {
-                                if(!err || err == 200){
+                            schreiber.create('shoppingCarts', cartId, cartObject, (err, fileDescriptor) => {
+                                if(!err && fileDescriptor){
                                     //Do not provide the hashed password to the wild
                                     delete userData.password;
-                                    console.log(userData);
                                     callback(200);
                                 } else {
-                                    callback(500, err);
+                                    callback(err);
                                 }
                             });
                         } else {
-                            callback(500, err);
+                            callback(err);
                         }
                     });
                 } else {
