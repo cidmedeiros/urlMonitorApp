@@ -2,5 +2,5 @@
 /.data
 /.logs
 exercise1.js
-/homeAssgn2/.data
-/homeAssgn2/node_modules
+/pizzaApp/node_modules
+/pizzaApp/.data
