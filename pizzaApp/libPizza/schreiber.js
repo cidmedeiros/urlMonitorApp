@@ -10,11 +10,11 @@ let schreiber = {};
 
 //Base directory of the data folder
 //__dirname -> native nodejs variable that tracks in which folder the file is
-schreiber.baseDir = path.join(__dirname, '../.data/');
+schreiber.baseDir = path.join(__dirname, './.data/');
 
 //Create a file and write data to it
 schreiber.create = (dir, file, data, callback) => {
-    //'wx' is one of many flags provided by the fs open method
+    //'wx' is one of many flags provided by the fs open method 
     fs.open(`${schreiber.baseDir}${dir}/${file}.json`, 'wx', (err, fileDescriptor) => {
         if(!err && fileDescriptor){
             //convert the data to string
@@ -24,17 +24,17 @@ schreiber.create = (dir, file, data, callback) => {
                 if(!err){
                     fs.close(fileDescriptor, (err) => {
                         if(!err){
-                            callback(200, {'message':'Success writing the file!'});
+                            callback(200);
                         } else{
-                            callback(500, err);
+                            callback(500);
                         }
                     });
                 } else {
-                    callback(500, err);
+                    callback(500);
                 }
             });
         } else{
-            callback(400, err);
+            callback(500, {'Could not create new file, it may already exist': err});
         }
     });
 };

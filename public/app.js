@@ -221,7 +221,6 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
       'password' : requestPayload.password
     };
 
-     //Actually creating the token to log the new user in
     app.client.request(undefined,'api/tokens','POST',undefined,newPayload,function(newStatusCode,newResponsePayload){
       // Display an error on the form if needed
       if(newStatusCode !== 200){

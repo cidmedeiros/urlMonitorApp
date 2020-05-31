@@ -281,6 +281,7 @@ handlers._users.post = (data, callback) => {
     const streetAddress = typeof(data.payload.streetAddress) == 'string' && data.payload.streetAddress.trim().length > 0 ? data.payload.streetAddress.trim() : false;
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
     const tosAgreement = typeof(data.payload.tosAgreement) == 'boolean' && data.payload.tosAgreement == true ? data.payload.tosAgreement : false;
+
     if(firstName && lastName && streetAddress && email && password && tosAgreement){
         //Make sure the user doesn't already exists
         schreiber.read('users', email, (err, data) => {
@@ -301,7 +302,7 @@ handlers._users.post = (data, callback) => {
                         'orders': [],
                     }
                     //Save User file
-                    schreiber.create('users', email, userData, (err, fileDescriptor) => {
+                    schreiber.create('users', email, userData, (err) => {
                         if(!err || err == 200){
                             //Create User's unique Shopping Cart
                             cartObject = {
@@ -311,11 +312,12 @@ handlers._users.post = (data, callback) => {
                                 'drinks': [],
                                 'desserts': []
                             }
-                            schreiber.create('shoppingCarts', cartId, cartObject, (err, fileDescriptor) => {
-                                if(!err && fileDescriptor){
+                            schreiber.create('shoppingCarts', cartId, cartObject, (err) => {
+                                if(!err || err == 200){
                                     //Do not provide the hashed password to the wild
                                     delete userData.password;
-                                    callback(200, false);
+                                    console.log(userData);
+                                    callback(200);
                                 } else {
                                     callback(500, err);
                                 }
@@ -543,9 +545,8 @@ handlers._tokens.post = (data, callback) => {
     //check if all required data are filled out
     const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
-    console.log('ring the bell');
+
     if(email && password){
-        console.log('payload ok');
         //Lookup the user who matches that email number 
         schreiber.read('users', email, (err, userData) => {
             if(!err && userData){
@@ -562,6 +563,7 @@ handlers._tokens.post = (data, callback) => {
                     //Store the token
                     schreiber.create('tokens', tokenId, tokenObject, (err) => {
                         if(!err || err == 200){
+                            console.log(tokenObject)
                             callback(200, tokenObject);
                         } else {
                             callback(500, {'message':'Error creating the token!'});
