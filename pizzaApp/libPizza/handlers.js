@@ -315,8 +315,7 @@ handlers._users.post = (data, callback) => {
                             schreiber.create('shoppingCarts', cartId, cartObject, (status, err) => {
                                 if(!err){
                                     //Do not provide the hashed password to the wild
-                                    delete userData.password;
-                                    callback(status, userData);
+                                    callback(200);
                                 } else {
                                     callback(500, err);
                                 }

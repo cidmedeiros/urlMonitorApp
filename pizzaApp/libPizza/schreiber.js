@@ -16,8 +16,6 @@ schreiber.baseDir = path.join(__dirname, '../.data/');
 schreiber.create = (dir, file, data, callback) => {
     //'wx' is one of many flags provided by the fs open method 
     fs.open(`${schreiber.baseDir}${dir}/${file}.json`, 'wx', (err, fileDescriptor) => {
-        console.log(`${schreiber.baseDir}${dir}/${file}.json`);
-        console.log('fileDescriptor', fileDescriptor);
         if(!err && fileDescriptor){
             //convert the data to string
             dataString = JSON.stringify(data);

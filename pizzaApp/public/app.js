@@ -185,7 +185,6 @@ app.bindForms = function(){
         app.client.request(undefined,path,method,queryStringObject,payload,function(statusCode,responsePayload){
           // Display an error to the user if the request status IS NOT 200
           if(statusCode !== 200){
-
             if(statusCode == 403){
               // log the user out
               app.logUserOut();
@@ -218,9 +217,9 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   var functionToCall = false;
   // If account creation was successful, try to immediately log the user in
   if(formId == 'accountCreate'){
-    // Take the phone and password, and use it to log the user in
+    // Take the email and password, and use it to log the user in
     var newPayload = {
-      'phone' : requestPayload.phone,
+      'email' : requestPayload.email,
       'password' : requestPayload.password
     };
 
@@ -228,7 +227,6 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
     app.client.request(undefined,'api/tokens','POST',undefined,newPayload,function(newStatusCode,newResponsePayload){
       // Display an error to the user if the request status IS NOT 200
       if(newStatusCode !== 200){
-
         /* CSS on the fly response to the user */
         // Set the formError field with the error text
         document.querySelector("#"+formId+" .formError").innerHTML = 'Sorry, an error has occured. Please try again.';
@@ -346,6 +344,169 @@ app.renewToken = function(callback){
   } else {
     app.setSessionToken(false);
     callback(true);
+  }
+};
+
+// Load data on the page
+app.loadDataOnPage = function(){
+  // Get the current page from the body class
+  var bodyClasses = document.querySelector("body").classList;
+  var primaryClass = typeof(bodyClasses[0]) == 'string' ? bodyClasses[0] : false;
+
+  // Logic for account settings page
+  if(primaryClass == 'accountEdit'){
+    app.loadAccountEditPage();
+  }
+
+  // Logic for dashboard page
+  if(primaryClass == 'checksList'){
+    app.loadChecksListPage();
+  }
+
+  // Logic for check details page
+  if(primaryClass == 'checksEdit'){
+    app.loadChecksEditPage();
+  }
+};
+
+// Load the account edit page specifically
+app.loadAccountEditPage = function(){
+  // Get the phone number from the current token, or log the user out if none is there
+  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+  if(phone){
+    // Fetch the user data
+    var queryStringObject = {
+      'phone' : phone
+    };
+    app.client.request(undefined,'api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+      if(statusCode == 200){
+        // Put the data into the forms as values where needed
+        document.querySelector("#accountEdit1 .firstNameInput").value = responsePayload.firstName;
+        document.querySelector("#accountEdit1 .lastNameInput").value = responsePayload.lastName;
+        document.querySelector("#accountEdit1 .displayPhoneInput").value = responsePayload.phone;
+
+        // Put the hidden phone field into both forms
+        var hiddenPhoneInputs = document.querySelectorAll("input.hiddenPhoneNumberInput");
+        for(var i = 0; i < hiddenPhoneInputs.length; i++){
+            hiddenPhoneInputs[i].value = responsePayload.phone;
+        }
+
+      } else {
+        // If the request comes back as something other than 200, log the user our (on the assumption that the api is temporarily down or the users token is bad)
+        app.logUserOut();
+      }
+    });
+  } else {
+    app.logUserOut();
+  }
+};
+
+// Load the dashboard page specifically
+app.loadChecksListPage = function(){
+  // Get the phone number from the current token, or log the user out if none is there
+  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+  if(phone){
+    // Fetch the user data
+    var queryStringObject = {
+      'phone' : phone
+    };
+    app.client.request(undefined,'api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+      if(statusCode == 200){
+
+        // Determine how many checks the user has
+        var allChecks = typeof(responsePayload.checks) == 'object' && responsePayload.checks instanceof Array && responsePayload.checks.length > 0 ? responsePayload.checks : [];
+        if(allChecks.length > 0){
+          // Show each created check as a new row in the table
+          allChecks.forEach(function(checkId){
+            // Get the data for the check
+            var newQueryStringObject = {
+              'id' : checkId
+            };
+            app.client.request(undefined,'api/checks','GET',newQueryStringObject,undefined,function(statusCode,responsePayload){
+              if(statusCode == 200){
+                var checkData = responsePayload;
+                // Make the check data into a table row
+                var table = document.getElementById("checksListTable");
+                var tr = table.insertRow(-1);
+                tr.classList.add('checkRow');
+                var td0 = tr.insertCell(0);
+                var td1 = tr.insertCell(1);
+                var td2 = tr.insertCell(2);
+                var td3 = tr.insertCell(3);
+                var td4 = tr.insertCell(4);
+                td0.innerHTML = responsePayload.method.toUpperCase();
+                td1.innerHTML = responsePayload.protocol+'://';
+                td2.innerHTML = responsePayload.url;
+                var state = typeof(responsePayload.state) == 'string' ? responsePayload.state : 'unknown';
+                td3.innerHTML = state;
+                td4.innerHTML = '<a href="/checks/edit?id='+responsePayload.id+'">View / Edit / Delete</a>';
+              } else {
+                console.log("Error trying to load check ID: ",checkId);
+              }
+            });
+          });
+
+          if(allChecks.length < 5){
+            // Show the createCheck CTA
+            document.getElementById("createCheckCTA").style.display = 'block';
+          }
+
+        } else {
+          // Show 'you have no checks' message
+          document.getElementById("noChecksMessage").style.display = 'table-row';
+
+          // Show the createCheck CTA
+          document.getElementById("createCheckCTA").style.display = 'block';
+
+        }
+      } else {
+        // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
+        app.logUserOut();
+      }
+    });
+  } else {
+    app.logUserOut();
+  }
+};
+
+// Load the checks edit page specifically
+app.loadChecksEditPage = function(){
+  // Get the check id from the query string, if none is found then redirect back to dashboard
+  var id = typeof(window.location.href.split('=')[1]) == 'string' && window.location.href.split('=')[1].length > 0 ? window.location.href.split('=')[1] : false;
+  if(id){
+    // Fetch the check data
+    var queryStringObject = {
+      'id' : id
+    };
+    app.client.request(undefined,'api/checks','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+      if(statusCode == 200){
+
+        // Put the hidden id field into both forms
+        var hiddenIdInputs = document.querySelectorAll("input.hiddenIdInput");
+        for(var i = 0; i < hiddenIdInputs.length; i++){
+            hiddenIdInputs[i].value = responsePayload.id;
+        }
+
+        // Put the data into the top form as values where needed
+        document.querySelector("#checksEdit1 .displayIdInput").value = responsePayload.id;
+        document.querySelector("#checksEdit1 .displayStateInput").value = responsePayload.state;
+        document.querySelector("#checksEdit1 .protocolInput").value = responsePayload.protocol;
+        document.querySelector("#checksEdit1 .urlInput").value = responsePayload.url;
+        document.querySelector("#checksEdit1 .methodInput").value = responsePayload.method;
+        document.querySelector("#checksEdit1 .timeoutInput").value = responsePayload.timeoutSeconds;
+        var successCodeCheckboxes = document.querySelectorAll("#checksEdit1 input.successCodesInput");
+        for(var i = 0; i < successCodeCheckboxes.length; i++){
+          if(responsePayload.successCodes.indexOf(parseInt(successCodeCheckboxes[i].value)) > -1){
+            successCodeCheckboxes[i].checked = true;
+          }
+        }
+      } else {
+        // If the request comes back as something other than 200, redirect back to dashboard
+        window.location = 'checks/all';
+      }
+    });
+  } else {
+    window.location = 'checks/all';
   }
 };
 
