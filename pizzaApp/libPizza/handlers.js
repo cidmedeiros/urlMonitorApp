@@ -302,8 +302,8 @@ handlers._users.post = (data, callback) => {
                         'orders': [],
                     }
                     //Save User file
-                    schreiber.create('users', email, userData, (err) => {
-                        if(!err || err == 200){
+                    schreiber.create('users', email, userData, (status,err) => {
+                        if(!err){
                             //Create User's unique Shopping Cart
                             cartObject = {
                                 'cartId': cartId,
@@ -312,12 +312,11 @@ handlers._users.post = (data, callback) => {
                                 'drinks': [],
                                 'desserts': []
                             }
-                            schreiber.create('shoppingCarts', cartId, cartObject, (err) => {
-                                if(!err || err == 200){
+                            schreiber.create('shoppingCarts', cartId, cartObject, (status, err) => {
+                                if(!err){
                                     //Do not provide the hashed password to the wild
                                     delete userData.password;
-                                    console.log(userData);
-                                    callback(200);
+                                    callback(status, userData);
                                 } else {
                                     callback(500, err);
                                 }
