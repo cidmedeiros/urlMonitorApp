@@ -300,10 +300,9 @@ handlers._users.post = (data, callback) => {
                         'shoppingCart': cartId,
                         'orders': [],
                     }
-                    console.log(userData);
                     //Save User file
                     schreiber.create('users', email, userData, (err, fileDescriptor) => {
-                        if(!err && fileDescriptor){
+                        if(!err || err == 200){
                             //Create User's unique Shopping Cart
                             cartObject = {
                                 'cartId': cartId,
@@ -316,13 +315,13 @@ handlers._users.post = (data, callback) => {
                                 if(!err && fileDescriptor){
                                     //Do not provide the hashed password to the wild
                                     delete userData.password;
-                                    callback(200);
+                                    callback(200, false);
                                 } else {
-                                    callback(err);
+                                    callback(500, err);
                                 }
                             });
                         } else {
-                            callback(err);
+                            callback(500, err);
                         }
                     });
                 } else {
@@ -544,8 +543,9 @@ handlers._tokens.post = (data, callback) => {
     //check if all required data are filled out
     const email = typeof(data.payload.email) == 'string' && tools.validateEmail(data.payload.email.trim()) ? data.payload.email.trim() : false;
     const password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password.trim() : false;
-
+    console.log('ring the bell');
     if(email && password){
+        console.log('payload ok');
         //Lookup the user who matches that email number 
         schreiber.read('users', email, (err, userData) => {
             if(!err && userData){
@@ -562,7 +562,6 @@ handlers._tokens.post = (data, callback) => {
                     //Store the token
                     schreiber.create('tokens', tokenId, tokenObject, (err) => {
                         if(!err || err == 200){
-                            console.log(tokenObject)
                             callback(200, tokenObject);
                         } else {
                             callback(500, {'message':'Error creating the token!'});

@@ -15,10 +15,8 @@ schreiber.baseDir = path.join(__dirname, '../.data/');
 //Create a file and write data to it
 schreiber.create = (dir, file, data, callback) => {
     //'wx' is one of many flags provided by the fs open method
-    console.log(`${schreiber.baseDir}${dir}/${file}.json`);
     fs.open(`${schreiber.baseDir}${dir}/${file}.json`, 'wx', (err, fileDescriptor) => {
         if(!err && fileDescriptor){
-            console.log('opening file');
             //convert the data to string
             dataString = JSON.stringify(data);
             //Write the dataString to file
@@ -26,17 +24,17 @@ schreiber.create = (dir, file, data, callback) => {
                 if(!err){
                     fs.close(fileDescriptor, (err) => {
                         if(!err){
-                            callback(false, fileDescriptor);
+                            callback(200, {'message':'Success writing the file!'});
                         } else{
-                            callback(err);
+                            callback(500, err);
                         }
                     });
                 } else {
-                    callback(err);
+                    callback(500, err);
                 }
             });
         } else{
-            callback(err);
+            callback(400, err);
         }
     });
 };
