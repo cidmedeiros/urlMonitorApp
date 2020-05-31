@@ -76,13 +76,16 @@ server.unifiedServer = (req, res) => {
         //if the request is within the public directory, use the public handler instead
         chosenhandler = trimmedPath.indexOf('public/') > -1 ? handlers.public : chosenhandler;
 
-        //setting up a GENERAL router to route the request to the handlers
+        //setting up a GENERAL Callback to router request response according to what was defined by the handlers file
         chosenhandler(data, (statusCode, handlerPayload, contentType) => {
             //Determine the type of response (fallback to JSON)
             contentType = typeof(contentType) == 'string' ? contentType : 'json';
 
             //use the handler statusCode or default to 200
             statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+
+            //use the payload called back by the handler, or default to an empty object
+            handlerPayload = typeof(handlerPayload) == 'object' ? handlerPayload : {}
 
             //Return the response-parts that are content-specific (sets header and payloads the content)
             var handlerPayloadString = ''
@@ -95,9 +98,7 @@ server.unifiedServer = (req, res) => {
             }
             if(contentType == 'html'){
                 res.setHeader('Content-Type', 'text/html');
-                handlerPayload = typeof(handlerPayload) == 'string' ? handlerPayload : '';
-                //Use the universal default variable
-                handlerPayloadString = handlerPayload;
+                handlerPayloadString = typeof(handlerPayload) == 'string' ? handlerPayload : '';
             }
             if(contentType == 'css'){
                 res.setHeader('Content-Type', 'text/css');
