@@ -1,38 +1,59 @@
-<h1>Check Details</h1>
+<h1>Our Menu</h1>
 <a class="backButton" href="/checks/all">Back</a>
 <hr />
 
-<h2>Edit the check details</h2>
-
 <div class="formWrapper">
-    <form id="addtoCart" action="api/shoppingcarts" method="POST">
-        <input class="hiddenIdInput"  type="hidden" name="uid" />
-        <div class="inputWrapper">
-            <div class="inputLabel">Protocol</div>
-            <select class="protocolInput" name="protocol">
-                <option value="http">http://</option>
-                <option value="https">https://</option>
-            </select>
+    <form id="checksEdit1" action="/api/checks" method="PUT">
+      <input type="hidden" name="_method" value="PUT"/>
+      <div class="formError"></div>
+      <div class="formSuccess">Your Changes Have Been Saved</div>
+      <input class="hiddenIdInput"  type="hidden" name="uid"/>
+
+      <h2>Our Pizzas</h2>
+
+      <div class="inputWrapper">
+        <div class="inputLabel">Choose Your Pizzas</div>
+        <div class="checkboxGroup">
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Classic Chesse', 'sm': 8.65}">Classic Chesse Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Classic Chesse', 'lg': 12.55}">Classic Chesse Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Pepperoni', 'sm': 8.65}">Pepperoni Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Pepperoni', 'lg': 12.55}">Pepperoni Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Buffalo Chicken', 'sm': 8.65}">Buffalo Chicken Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Buffalo Chicken', 'lg': 12.55}">Buffalo Chicken Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Tropical', 'sm': 8.65}">Tropical Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Tropical', 'lg': 12.55}">Tropical Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Vegetarian', 'sm': 8.65}">Vegetarian Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Vegetarian', 'lg': 12.55}">Vegetarian Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Vegan', 'sm': 16.65}">Vegan Small 16.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Vegan', 'sm': 16.65}">Vegan Large 22.55
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Margherita', 'sm': 16.65}">Margherita Small 16.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Margherita', 'sm': 16.65}">Margherita Large 22.55
         </div>
+      </div>
+
+      <h2>Drinks</h2>
+      
+      <div class="inputWrapper">
+        <div class="inputLabel">Choose Your Drinks</div>
+        <div class="checkboxGroup">
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'coke', 'sm': 1.65}">Coke Small 1.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'coke', 'sm': 2.55}">Coke Large 2.55
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'orange juice', 'sm': 2.65}">Coke Small 1.65
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'orange juice', 'sm': 3.55}">Coke Large 3.55
+          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'Canned Beer', 'sm': 2.65}">Canned Beer 2.65
+        </div>
+      </div>
+  
+      <div class="inputWrapper ctaWrapper">
+        <button type="submit" class="cta green">Add to Cart</button>
+      </div>
     </form>
-</div>
+  </div>
 
 
 <!-- const menu = {}
-menu.pizzas = {
-    'opt1' : {'flavor':'Classic Chesse', 'sm': 8.65, 'lg':12.55},
-    'opt2' : {'flavor':'Pepperoni', 'sm': 8.65, 'lg':12.55},
-    'opt3' : {'flavor':'Buffalo Chicken', 'sm': 8.65, 'lg':12.55},
-    'opt4' : {'flavor':'Tropical', 'sm': 8.65, 'lg':12.55},
-    'opt5' : {'flavor':'Vegetarian', 'sm': 8.65, 'lg':12.55},
-    'opt6' : {'flavor':'Vegan', 'sm': 16.65, 'lg':22.55},
-    'opt7' : {'flavor':'Margherita', 'sm': 16.65, 'lg':22.55},
-};
-
 menu.drinks = {
-    'opt1': {'drink': 'coke', 'sm': 1.65, 'lg':2.55},
-    'opt2': {'drink': 'orange juice', 'sm': 2.65, 'lg':3.55},
-    'opt3': {'drink': 'Canned Beer', 'sm': 2.65},
+    
 }
 
 menu.desserts = {
