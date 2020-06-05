@@ -1,0 +1,42 @@
+<h1>Check Details</h1>
+<a class="backButton" href="/checks/all">Back</a>
+<hr />
+
+<h2>Edit the check details</h2>
+
+<div class="formWrapper">
+    <form id="addtoCart" action="api/shoppingcarts" method="POST">
+        <input class="hiddenIdInput"  type="hidden" name="uid" />
+        <div class="inputWrapper">
+            <div class="inputLabel">Protocol</div>
+            <select class="protocolInput" name="protocol">
+                <option value="http">http://</option>
+                <option value="https">https://</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+
+<!-- const menu = {}
+menu.pizzas = {
+    'opt1' : {'flavor':'Classic Chesse', 'sm': 8.65, 'lg':12.55},
+    'opt2' : {'flavor':'Pepperoni', 'sm': 8.65, 'lg':12.55},
+    'opt3' : {'flavor':'Buffalo Chicken', 'sm': 8.65, 'lg':12.55},
+    'opt4' : {'flavor':'Tropical', 'sm': 8.65, 'lg':12.55},
+    'opt5' : {'flavor':'Vegetarian', 'sm': 8.65, 'lg':12.55},
+    'opt6' : {'flavor':'Vegan', 'sm': 16.65, 'lg':22.55},
+    'opt7' : {'flavor':'Margherita', 'sm': 16.65, 'lg':22.55},
+};
+
+menu.drinks = {
+    'opt1': {'drink': 'coke', 'sm': 1.65, 'lg':2.55},
+    'opt2': {'drink': 'orange juice', 'sm': 2.65, 'lg':3.55},
+    'opt3': {'drink': 'Canned Beer', 'sm': 2.65},
+}
+
+menu.desserts = {
+    'opt1': {'dessert': 'Cookie', 'sm': 1.99, 'lg':3.98},
+    'opt2': {'dessert': 'Brownie', 'sm': 2.65, 'lg':3.55},
+    'opt3': {'dessert': 'Ice Cream', 'sm': 2.65, 'lg':3.55}
+} -->
