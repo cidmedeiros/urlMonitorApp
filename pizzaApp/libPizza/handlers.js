@@ -250,6 +250,46 @@ handlers.public = (data, callback) => {
     }
 };
 
+//Define Menu function to handle all possible related http verbs
+handlers.menu = (data, callback) => {
+    const acceptableMethods = ['get'];
+    if(acceptableMethods.indexOf(data.method) > -1){
+        handlers._menu[data.method](data, callback);
+    } else{
+        callback(405);
+    }
+};
+
+//SubContainer for handler.menu subMethods
+handlers._menu = {};
+
+/* Define menu get submethod.
+Clients can only get menu information. They can not post or update the menu information. */
+handlers._menu.get = (menu, callback) => {
+    // Prepare data for interpolation
+    var templateData = {
+        'head.title' : 'Menu - Pizzas & Drinks',
+        'head.description' : 'Make it Delicious',
+        'body.class' : 'menu'
+    };
+    // Read in a template as a string
+    tools.getTemplate('menu',templateData, (err,str)=> {
+        if(!err && str){
+        // Add the universal header and footer
+        tools.addUniversalTemplates(str,templateData, (err,str) => {
+            if(!err && str){
+            // Return that page as HTML
+            callback(200,str,'html');
+            } else {
+            callback(500,undefined,'html');
+            }
+        });
+        } else {
+        callback(500,undefined,'html');
+        }
+    });
+}
+
 /*
     **JSON API HANDLERS
  */
@@ -732,64 +772,6 @@ handlers._tokens.verifyExpiredToken = (token, callback) => {
             callback(false, {'Error': 'Could not find the specified token!'});
         }
     });
-}
-
-//Define Menu function to handle all possible related http verbs
-handlers.menu = (data, callback) => {
-    const acceptableMethods = ['get'];
-    if(acceptableMethods.indexOf(data.method) > -1){
-        handlers._menu[data.method](data, callback);
-    } else{
-        callback(405);
-    }
-};
-
-//Define the restaurant menu
-const menu = {}
-menu.pizzas = {
-    'opt1' : {'flavor':'Classic Chesse', 'sm': 8.65, 'lg':12.55},
-    'opt2' : {'flavor':'Pepperoni', 'sm': 8.65, 'lg':12.55},
-    'opt3' : {'flavor':'Buffalo Chicken', 'sm': 8.65, 'lg':12.55},
-    'opt4' : {'flavor':'Tropical', 'sm': 8.65, 'lg':12.55},
-    'opt5' : {'flavor':'Vegetarian', 'sm': 8.65, 'lg':12.55},
-    'opt6' : {'flavor':'Vegan', 'sm': 16.65, 'lg':22.55},
-    'opt7' : {'flavor':'Margherita', 'sm': 16.65, 'lg':22.55},
-};
-
-menu.drinks = {
-    'opt1': {'drink': 'coke', 'sm': 1.65, 'lg':2.55},
-    'opt2': {'drink': 'orange juice', 'sm': 2.65, 'lg':3.55},
-    'opt3': {'drink': 'Canned Beer', 'sm': 2.65},
-}
-
-menu.desserts = {
-    'opt1': {'dessert': 'Cookie', 'sm': 1.99, 'lg':3.98},
-    'opt2': {'dessert': 'Brownie', 'sm': 2.65, 'lg':3.55},
-    'opt3': {'dessert': 'Ice Cream', 'sm': 2.65, 'lg':3.55}
-}
-
-//SubContainer for handler.menu subMethods
-handlers._menu = {};
-
-/* Define menu get submethod.
-Clients can only get menu information. They can not post or update the menu information. */
-handlers._menu.get = (data, callback) => {
-     //Get the token from the headers
-     const token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
-     //Verify if a given token id is currently valid
-     if(token){
-         //verify if session hasn't expired
-         handlers._tokens.verifyExpiredToken(token, (isTokenValid) =>{
-             if(isTokenValid){
-                 console.log(menu);
-                 callback(200, menu);
-             } else {
-                callback(403, 'This Session has expired!');
-             }
-         });
-     } else {
-         callback(400, {'Error':'Missing or invalid required field!'})
-     }
 } 
 
 //ShoppingCart function to handle all possible related http verbs
