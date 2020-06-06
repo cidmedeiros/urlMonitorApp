@@ -3,10 +3,10 @@
 <hr />
 
 <div class="formWrapper">
-    <form id="checksEdit1" action="/api/checks" method="PUT">
+    <form id="addToCart" action="api/shoppingcarts" method="PUT">
       <input type="hidden" name="_method" value="PUT"/>
       <div class="formError"></div>
-      <div class="formSuccess">Your Changes Have Been Saved</div>
+      <div class="formSuccess">Your Options Have Been Added to the Cart</div>
       <input class="hiddenIdInput"  type="hidden" name="uid"/>
 
       <h2>Our Pizzas</h2>
@@ -14,20 +14,20 @@
       <div class="inputWrapper">
         <div class="inputLabel">Choose Your Pizzas</div>
         <div class="checkboxGroup">
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Classic Chesse', 'sm': 8.65}">Classic Chesse Small 8.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Classic Chesse', 'lg': 12.55}">Classic Chesse Large 12.55
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Pepperoni', 'sm': 8.65}">Pepperoni Small 8.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Pepperoni', 'lg': 12.55}">Pepperoni Large 12.55
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Buffalo Chicken', 'sm': 8.65}">Buffalo Chicken Small 8.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Buffalo Chicken', 'lg': 12.55}">Buffalo Chicken Large 12.55
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Tropical', 'sm': 8.65}">Tropical Small 8.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Tropical', 'lg': 12.55}">Tropical Large 12.55
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Vegetarian', 'sm': 8.65}">Vegetarian Small 8.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Vegetarian', 'lg': 12.55}">Vegetarian Large 12.55
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Vegan', 'sm': 16.65}">Vegan Small 16.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Vegan', 'sm': 16.65}">Vegan Large 22.55
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Margherita', 'sm': 16.65}">Margherita Small 16.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'flavor':'Margherita', 'sm': 16.65}">Margherita Large 22.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza1" value='{"flavor":"Classic Chesse", "sm": 8.65}'>Classic Chesse Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza2" value='{"flavor":"Classic Chesse", "lg": 12.55}'>Classic Chesse Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza3" value='{"flavor":"Pepperoni", "sm": 8.65}'>Pepperoni Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza4" value='{"flavor":"Pepperoni", "lg": 12.55}'>Pepperoni Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza5" value='{"flavor":"Buffalo Chicken", "sm": 8.65}'>Buffalo Chicken Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza6" value='{"flavor":"Buffalo Chicken", "lg": 12.55}'>Buffalo Chicken Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza7" value='{"flavor":"Tropical", "sm": 8.65}'>Tropical Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza8" value='{"flavor":"Tropical", "lg": 12.55}'>Tropical Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza9" value='{"flavor":"Vegetarian", "sm": 8.65}'>Vegetarian Small 8.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza10" value='{"flavor":"Vegetarian", "lg": 12.55}'>Vegetarian Large 12.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza11" value='{"flavor":"Vegan", "sm": 16.65}'>Vegan Small 16.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza12" value='{"flavor":"Vegan", "sm": 16.65}'>Vegan Large 22.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza13" value='{"flavor":"Margherita", "sm": 16.65}'>Margherita Small 16.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="pizza14" value='{"flavor":"Margherita", "sm": 16.65}'>Margherita Large 22.55
         </div>
       </div>
 
@@ -36,11 +36,25 @@
       <div class="inputWrapper">
         <div class="inputLabel">Choose Your Drinks</div>
         <div class="checkboxGroup">
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'coke', 'sm': 1.65}">Coke Small 1.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'coke', 'sm': 2.55}">Coke Large 2.55
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'orange juice', 'sm': 2.65}">Coke Small 1.65
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'orange juice', 'sm': 3.55}">Coke Large 3.55
-          <input type="checkbox" class="successCodesInput multiselect intval" name="successCodes" value="{'drink': 'Canned Beer', 'sm': 2.65}">Canned Beer 2.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="drink1" value='{"drink": "coke", "sm": 1.65}'>Coke Small 1.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="drink2" value='{"drink": "coke", "sm": 2.55}'>Coke Large 2.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="drink3" value='{"drink": "orange juice", "sm": 2.65}'>Coke Small 1.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="drink4" value='{"drink": "orange juice", "sm": 3.55}'>Coke Large 3.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="drink5" value='{"drink": "Canned Beer", "sm": 2.65}'>Canned Beer 2.65
+        </div>
+      </div>
+
+      <h2>Desserts</h2>
+      
+      <div class="inputWrapper">
+        <div class="inputLabel">Choose Your Desserts</div>
+        <div class="checkboxGroup">
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="Desserts1" value='{"dessert": "Cookie", "sm": 1.99}'>Cookie Small 1.99
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="Desserts2" value='{"dessert": "Cookie", "lg":3.98}'>Cookie Large 3.98
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="Desserts3" value='{"dessert": "Brownie", "sm": 2.65}'>Brownie Small 2.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="Desserts4" value='{"dessert": "Brownie", "lg": 3.55}'>Brownie Large 3.55
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="Desserts5" value='{"dessert": "Ice Cream", "sm": 2.65}'>Ice Cream Small 2.65
+          <input type="checkbox" class="successCodesInput multiselect intval menu" name="Desserts6" value='{"dessert": "Ice Cream", "lg": 3.55}'>Ice Cream Large 3.55
         </div>
       </div>
   
@@ -49,15 +63,3 @@
       </div>
     </form>
   </div>
-
-
-<!-- const menu = {}
-menu.drinks = {
-    
-}
-
-menu.desserts = {
-    'opt1': {'dessert': 'Cookie', 'sm': 1.99, 'lg':3.98},
-    'opt2': {'dessert': 'Brownie', 'sm': 2.65, 'lg':3.55},
-    'opt3': {'dessert': 'Ice Cream', 'sm': 2.65, 'lg':3.55}
-} -->
