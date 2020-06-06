@@ -395,7 +395,6 @@ handlers._users.get = (data, callback) => {
                         if(!err && userData){
                             //Do not provide the hashed password to the wild
                             delete userData.password;
-                            console.log(userData);
                             callback(200, userData);
                         } else {
                             callback(404);
@@ -457,7 +456,6 @@ handlers._users.put = (data, callback) => {
                                     if(!err || err == 200){
                                         //Do not provide the hashed password to the wild
                                         delete userData.password;
-                                        console.log(userData);
                                         callback(200, {'Message': 'update successful!'});
                                     } else {
                                         callback(500, {'Error': err});
@@ -601,7 +599,6 @@ handlers._tokens.post = (data, callback) => {
                     //Store the token
                     schreiber.create('tokens', tokenId, tokenObject, (err) => {
                         if(!err || err == 200){
-                            console.log(tokenObject)
                             callback(200, tokenObject);
                         } else {
                             callback(500, {'message':'Error creating the token!'});
@@ -637,7 +634,6 @@ handlers._tokens.get = (data, callback) => {
                 if(isTokenValid){
                     schreiber.read('tokens', id, (err, tokenData) => {
                         if(!err && tokenData){
-                            console.log(tokenData);
                             callback(200, tokenData);
                         } else {
                             callback(404);
@@ -679,7 +675,6 @@ handlers._tokens.put = (data, callback) => {
                             //Store the new updates
                             schreiber.update('tokens', id, tokenData, (err) =>{
                                 if(!err || err == 200){
-                                    console.log(tokenData);
                                     callback(200, tokenData);
                                 } else {
                                     callback(500, err);
@@ -720,7 +715,6 @@ handlers._tokens.delete = (data, callback) => {
                     //Do not provide the hashed password to the wild
                     schreiber.delete('tokens', id, (err) => {
                         if(!err || err == 200){
-                            console.log({'Message':'Token Deleted!'});
                             callback(200, {'Message':'Token Deleted!'});
                         } else{
                             callback(500, {'Error': 'Could not delete token!'});        
@@ -826,7 +820,6 @@ handlers._shoppingcarts.post = (data, callback) => {
                                 }
                             schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
                                 if(err == 200){
-                                    console.log(cartData);
                                     callback(200, cartData);
                                 } else {
                                     callback(500, {'Error':'Could not add item(s) to the cart!'});
@@ -865,7 +858,6 @@ handlers._shoppingcarts.get = (data, callback) => {
                 if(token){
                     handlers._tokens.verifyUserToken(token, email, (tokenIsValid) => {
                         if(tokenIsValid){
-                            console.log(cartData);
                             callback(200, cartData);
                         } else {
                             callback(403, {'Error': 'Either the user does not exist, or the token is/has invalid/expired!'});
@@ -886,6 +878,8 @@ handlers._shoppingcarts.get = (data, callback) => {
 /* Define shoppingCart put submethod -> it deletes or changes the items from the shopping cart.
 Clients can only update their own shopping carts. */
 handlers._shoppingcarts.put = (data, callback) => {
+    console.log('ring the bell');
+    console.log(data);
     /* Required data: itemId to be updated
        optional data: none
      */
@@ -955,7 +949,6 @@ handlers._shoppingcarts.put = (data, callback) => {
                                     }
                                 schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
                                     if(err == 200){
-                                        console.log(cartData);
                                         callback(200, cartData);
                                     } else {
                                         callback(500, {'Error':'Could not update Shopping Cart!'});
@@ -1079,7 +1072,7 @@ handlers._orders.post = (data, callback) => {
                                                 }
                                             });
                                         } else {
-                                            console.log(500, {'Could not empty shoppingCart!':err});
+                                            callback(500, {'Could not empty shoppingCart!':err});
                                         }
                                     })
                                 } else{
