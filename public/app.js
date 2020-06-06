@@ -308,7 +308,7 @@ app.setSessionToken = function(token){
   }
 };
 
-// Renew the token
+// Renew the token - PUT request to Token handler
 app.renewToken = function(callback){
   var currentToken = typeof(app.config.sessionToken) == 'object' ? app.config.sessionToken : false;
   if(currentToken){
@@ -341,6 +341,17 @@ app.renewToken = function(callback){
     app.setSessionToken(false);
     callback(true);
   }
+};
+
+// Loop to renew token often
+app.tokenRenewalLoop = function(){
+  setInterval(function(){
+    app.renewToken(function(err){
+      if(!err){
+        console.log("Token renewed successfully @ "+Date.now());
+      }
+    });
+  },1000 * 60);
 };
 
 // Load data on the page
@@ -504,17 +515,6 @@ app.loadChecksEditPage = function(){
   } else {
     window.location = 'checks/all';
   }
-};
-
-// Loop to renew token often
-app.tokenRenewalLoop = function(){
-  setInterval(function(){
-    app.renewToken(function(err){
-      if(!err){
-        console.log("Token renewed successfully @ "+Date.now());
-      }
-    });
-  },1000 * 60);
 };
 
 // Init (bootstrapping)

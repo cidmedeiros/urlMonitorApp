@@ -245,7 +245,7 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   // If regular login is successful, set the token in localstorage and redirect the user
   if(formId == 'sessionCreate'){
     app.setSessionToken(responsePayload);
-    window.location = 'menu';
+    window.location = 'api/menu';
   }
 
   // If forms saved successfully, and they have success messages, show them
@@ -345,6 +345,17 @@ app.renewToken = function(callback){
     app.setSessionToken(false);
     callback(true);
   }
+};
+
+// Loop to renew token often
+app.tokenRenewalLoop = function(){
+  setInterval(function(){
+    app.renewToken(function(err){
+      if(!err){
+        console.log("Token renewed successfully @ "+Date.now());
+      }
+    });
+  },1000 * 60);
 };
 
 // Load data on the page
@@ -508,17 +519,6 @@ app.loadChecksEditPage = function(){
   } else {
     window.location = 'checks/all';
   }
-};
-
-// Loop to renew token often
-app.tokenRenewalLoop = function(){
-  setInterval(function(){
-    app.renewToken(function(err){
-      if(!err){
-        console.log("Token renewed successfully @ "+Date.now());
-      }
-    });
-  },1000 * 60);
 };
 
 // Init (bootstrapping)
