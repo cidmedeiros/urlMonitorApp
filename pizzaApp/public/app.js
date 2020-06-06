@@ -188,14 +188,12 @@ app.bindForms = function(){
               } else {
                 payload[nameOfElement] = valueOfElement;
               }
-
             }
           }
         }
 
         // If the method is DELETE, the payload should be a queryStringObject instead
         var queryStringObject = method == 'DELETE' ? payload : {};
-        console.log(payload);
         // Call the API
         app.client.request(undefined,path,method,queryStringObject,payload,function(statusCode,responsePayload){
           // Display an error on the form if needed

@@ -878,16 +878,15 @@ handlers._shoppingcarts.get = (data, callback) => {
 /* Define shoppingCart put submethod -> it deletes or changes the items from the shopping cart.
 Clients can only update their own shopping carts. */
 handlers._shoppingcarts.put = (data, callback) => {
-    console.log('ring the bell');
-    console.log(data);
     /* Required data: itemId to be updated
        optional data: none
      */
     //Data must come in as a json parsed object */
     //check the provided data if filled out
-    const pizza = typeof(data.payload.pizza) == 'object' && Object.keys(data.payload.pizza).length > 0 ? data.payload.pizza : false;
-    const drink = typeof(data.payload.drink) == 'object' && Object.keys(data.payload.drink).length > 0 ? data.payload.drink : false;
-    const dessert = typeof(data.payload.dessert) == 'object' && Object.keys(data.payload.dessert).length > 0 ? data.payload.dessert : false;
+    console.log(data.payload);
+    const pizza = data.payload.pizza instanceof Array && Object.keys(data.payload.pizza).length > 0 ? data.payload.pizza : false;
+    const drink = data.payload.drink instanceof Array && Object.keys(data.payload.drink).length > 0 ? data.payload.drink : false;
+    const dessert = data.payload.dessert instanceof Array && Object.keys(data.payload.dessert).length > 0 ? data.payload.dessert : false;
 
     //check for the itemId
     if(pizza){
