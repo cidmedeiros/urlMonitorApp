@@ -154,7 +154,8 @@ app.bindForms = function(){
             var valueOfElement = elements[i].type == 'checkbox' && classOfElement.indexOf('multiselect') == -1 ? elements[i].checked : classOfElement.indexOf('intval') == -1 ? elements[i].value : elements[i].value;
 
             var elementIsChecked = elements[i].checked;
-            // Override the method of the form if the input's name is _method
+            /* Override the method of the form if the input's name is _method
+               It applies for form with a hidden input for PUT method */
             var nameOfElement = elements[i].name;
             if(nameOfElement == '_method'){
               method = valueOfElement;
