@@ -132,7 +132,6 @@ app.bindForms = function(){
         var path = this.action;
         var method = this.method.toUpperCase();
 
-        /* CSS on the fly response to the user */
         // Hide the error message (if it's currently shown due to a previous error)
         document.querySelector("#"+formId+" .formError").style.display = 'none';
 
@@ -143,49 +142,53 @@ app.bindForms = function(){
 
         // Turn the inputs into a payload
         var payload = {};
+        payload.pizza = [];
+        payload.drink = [];
+        payload.dessert = [];
         var elements = this.elements;
-        //Setting elements according to its specificities
         for(var i = 0; i < elements.length; i++){
           if(elements[i].type !== 'submit'){
             // Determine class of element and set value accordingly
             var classOfElement = typeof(elements[i].classList.value) == 'string' && elements[i].classList.value.length > 0 ? elements[i].classList.value : '';
-            var valueOfElement = elements[i].type == 'checkbox' && classOfElement.indexOf('multiselect') == -1 ? elements[i].checked : classOfElement.indexOf('intval') == -1 ? elements[i].value : parseInt(elements[i].value);
 
+            var valueOfElement = elements[i].type == 'checkbox' && classOfElement.indexOf('multiselect') == -1 ? elements[i].checked : classOfElement.indexOf('intval') == -1 ? elements[i].value : elements[i].value;
+
+            var elementIsChecked = elements[i].checked;
             // Override the method of the form if the input's name is _method
             var nameOfElement = elements[i].name;
             if(nameOfElement == '_method'){
               method = valueOfElement;
             } else {
-              // Create a payload field named "method" if the elements name is httpmethod
+              // Create an payload field named "method" if the elements name is actually httpmethod
               if(nameOfElement == 'httpmethod'){
                 nameOfElement = 'method';
               }
-              // Create a payload field named "id" if the elements name is uid
+              // Create an payload field named "id" if the elements name is actually uid
               if(nameOfElement == 'uid'){
                 nameOfElement = 'id';
               }
               // If the element has the class "multiselect" add its value(s) as array elements
-              if(classOfElement.indexOf('multiselect') > -1){
-                payload.pizza = [];
-                payload.drink = [];
-                payload.dessert = [];
-                //Check if checkbox is checked
-                var elementIsChecked = elements[i].checked;
-                var dataValue = elements[i].value
+              if(classOfElement.indexOf('multiselect') > -1 && classOfElement.indexOf('menu') == -1){
                 if(elementIsChecked){
-                  if(elements[i].name.indexOf('pizza') >= 0){
-                    payload.pizza.push(dataValue);
+                  payload[nameOfElement] = typeof(payload[nameOfElement]) == 'object' && payload[nameOfElement] instanceof Array ? payload[nameOfElement] : [];
+                  payload[nameOfElement].push(valueOfElement);
+                }
+              } else if(classOfElement.indexOf('menu') > -1){
+                if(elementIsChecked){
+                  if(nameOfElement.indexOf('pizza') > -1){
+                    payload.pizza.push(valueOfElement);
                   }
-                  if(elements[i].name.indexOf('drink') >= 0){
-                    payload.drink.push(dataValue);
+                  if(nameOfElement.indexOf('drink')  > -1){
+                    payload.drink.push(valueOfElement);
                   }
-                  if(elements[i].name.indexOf('dessert') >= 0){
-                    payload.dessert.push(dataValue);
+                  if(nameOfElement.indexOf('Desserts') > -1){
+                    payload.dessert.push(valueOfElement);
                   }
                 }
               } else {
                 payload[nameOfElement] = valueOfElement;
               }
+
             }
           }
         }
@@ -193,10 +196,11 @@ app.bindForms = function(){
         // If the method is DELETE, the payload should be a queryStringObject instead
         var queryStringObject = method == 'DELETE' ? payload : {};
         console.log(payload);
-        // Call the API - Passing a generic callback
+        // Call the API
         app.client.request(undefined,path,method,queryStringObject,payload,function(statusCode,responsePayload){
-          // Display an error to the user if the request status IS NOT 200
+          // Display an error on the form if needed
           if(statusCode !== 200){
+
             if(statusCode == 403){
               // log the user out
               app.logUserOut();
@@ -206,7 +210,6 @@ app.bindForms = function(){
               // Try to get the error from the api, or set a default error message
               var error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
 
-              /* CSS on the fly response to the user */
               // Set the formError field with the error text
               document.querySelector("#"+formId+" .formError").innerHTML = error;
 
