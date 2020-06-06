@@ -150,7 +150,7 @@ app.bindForms = function(){
             // Determine class of element and set value accordingly
             var classOfElement = typeof(elements[i].classList.value) == 'string' && elements[i].classList.value.length > 0 ? elements[i].classList.value : '';
             var valueOfElement = elements[i].type == 'checkbox' && classOfElement.indexOf('multiselect') == -1 ? elements[i].checked : classOfElement.indexOf('intval') == -1 ? elements[i].value : parseInt(elements[i].value);
-            var elementIsChecked = elements[i].checked;
+
             // Override the method of the form if the input's name is _method
             var nameOfElement = elements[i].name;
             if(nameOfElement == '_method'){
@@ -166,21 +166,33 @@ app.bindForms = function(){
               }
               // If the element has the class "multiselect" add its value(s) as array elements
               if(classOfElement.indexOf('multiselect') > -1){
+                payload.pizza = [];
+                payload.drink = [];
+                payload.dessert = [];
+                //Check if checkbox is checked
+                var elementIsChecked = elements[i].checked;
+                var dataValue = elements[i].value
                 if(elementIsChecked){
-                  payload[nameOfElement] = typeof(payload[nameOfElement]) == 'object' && payload[nameOfElement] instanceof Array ? payload[nameOfElement] : [];
-                  payload[nameOfElement].push(valueOfElement);
+                  if(elements[i].name.indexOf('pizza') >= 0){
+                    payload.pizza.push(dataValue);
+                  }
+                  if(elements[i].name.indexOf('drink') >= 0){
+                    payload.drink.push(dataValue);
+                  }
+                  if(elements[i].name.indexOf('dessert') >= 0){
+                    payload.dessert.push(dataValue);
+                  }
                 }
               } else {
                 payload[nameOfElement] = valueOfElement;
               }
-
             }
           }
         }
 
         // If the method is DELETE, the payload should be a queryStringObject instead
         var queryStringObject = method == 'DELETE' ? payload : {};
-
+        console.log(payload);
         // Call the API - Passing a generic callback
         app.client.request(undefined,path,method,queryStringObject,payload,function(statusCode,responsePayload){
           // Display an error to the user if the request status IS NOT 200
