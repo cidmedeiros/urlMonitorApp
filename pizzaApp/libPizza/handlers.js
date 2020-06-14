@@ -880,31 +880,44 @@ Clients can only update their own shopping carts. */
 handlers._shoppingcarts.put = (data, callback) => {
     /* Required data: itemId to be updated
        optional data: none
-     */
+     */     
     //Data must come in as a json parsed object */
     //check the provided data if filled out
-    console.log(data.payload);
-    const pizza = data.payload.pizza instanceof Array && Object.keys(data.payload.pizza).length > 0 ? data.payload.pizza : false;
-    const drink = data.payload.drink instanceof Array && Object.keys(data.payload.drink).length > 0 ? data.payload.drink : false;
-    const dessert = data.payload.dessert instanceof Array && Object.keys(data.payload.dessert).length > 0 ? data.payload.dessert : false;
-
+    const pizza = data.payload.pizza instanceof Array ? data.payload.pizza : false;
+    const drink = data.payload.drink instanceof Array ? data.payload.drink : false;
+    const dessert = data.payload.dessert instanceof Array ? data.payload.dessert : false;
     //check for the itemId
     if(pizza){
-        var pizzaItemId = typeof(data.payload.pizza.itemId) == 'string' && data.payload.pizza.itemId.trim().length == 20 ? data.payload.pizza.itemId : false;
-    } else{
-        var pizzaItemId = false;
+        for(var i = 0; i < pizza.length; i++){
+            if(typeof(pizza[i]) == 'string'){
+                pizza[i] = JSON.parse(pizza[i]);
+            }
+            if(pizza[i].hasOwnProperty('itemId') == false){
+                pizza[i].itemId = tools.createRandomString(20);
+            }
+        }   
     }
 
     if(drink){
-        var drinkItemId = typeof(data.payload.drink.itemId) == 'string' && data.payload.drink.itemId.trim().length == 20 ? data.payload.drink.itemId : false;
-    } else{
-        var drinkItemId = false;
+        for(var i = 0; i < drink.length; i++){
+            if(typeof(drink[i]) == 'string'){
+                drink[i] = JSON.parse(drink[i]);
+            }
+            if(drink[i].hasOwnProperty('itemId') == false){
+                drink[i].itemId = tools.createRandomString(20);
+            }
+        }   
     }
-    
+
     if(dessert){
-        var dessertItemId = typeof(data.payload.dessert.itemId) == 'string' && data.payload.dessert.itemId.trim().length == 20 ? data.payload.dessert.itemId : false;
-    } else{
-        var dessertItemId = false;
+        for(var i = 0; i < dessert.length; i++){
+            if(typeof(dessert[i]) == 'string'){
+                dessert[i] = JSON.parse(dessert[i]);
+            }
+            if(dessert[i].hasOwnProperty('itemId') == false){
+                dessert[i].itemId = tools.createRandomString(20);
+            }
+        }   
     }
 
     //Get the token from the headers
@@ -922,39 +935,61 @@ handlers._shoppingcarts.put = (data, callback) => {
                             //get user's Shopping Cart
                             schreiber.read('shoppingCarts', userData.shoppingCart, (err, cartData) => {
                                 if(!err){
-                                    if(pizzaItemId){
-                                        for (var i = 0; i < cartData.pizzas.length; i++){
-                                            if (cartData.pizzas[i].itemId == pizzaItemId) {
-                                                cartData.pizzas.splice(i,1);
-                                                cartData.pizzas.push(data.payload.pizza);
+                                    if(cartData.pizzas.length > 0){
+                                        for(var i = 0; i < cartData.pizzas.length; i++){
+                                            for(item of pizza){
+                                                if(cartData.pizzas[i].itemId == item.itemId){
+                                                    cartData.pizzas.splice(i,1);
+                                                    cartData.pizzas.push(item);
+                                                } else{
+                                                    cartData.pizzas.push(item);
+                                                }
                                             }
                                         }
-                                    }
-                                    if(drinkItemId){
-                                        for (var i = 0; i < cartData.drinks.length; i++){
-                                            if (cartData.drinks[i].itemId == drinkItemId) {
-                                                cartData.drinks.splice(i,1);
-                                                cartData.drinks.push(data.payload.drink);
-                                            }
-                                        }
-                                    }
-                                    if(dessertItemId){
-                                        for (var i = 0; i < cartData.desserts.length; i++){
-                                            if (cartData.desserts[i].itemId == dessertItemId) {
-                                                cartData.desserts.splice(i,1);
-                                                cartData.desserts.push(data.payload.dessert);
-                                            }
-                                        }
-                                    }
-                                schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
-                                    if(err == 200){
-                                        callback(200, cartData);
                                     } else {
-                                        callback(500, {'Error':'Could not update Shopping Cart!'});
+                                        for(item of pizza){
+                                            cartData.pizzas.push(item);
+                                        }
                                     }
-                                });
-                                } else {
-                                    callback(500, {'Error':'Could not find the user\'s Shopping Cart!'});
+                                    if(cartData.drinks.length > 0){
+                                        for(var i = 0; i < cartData.drinks.length; i++){
+                                            for(item of drink){
+                                                if(cartData.drinks[i].itemId == item.itemId){
+                                                    cartData.drinks.splice(i,1);
+                                                    cartData.drinks.push(item);
+                                                } else{
+                                                    cartData.drinks.push(item);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        for(item of drink){
+                                            cartData.drinks.push(item);
+                                        }
+                                    }
+                                    if(cartData.desserts.length > 0){
+                                        for(var i = 0; i < cartData.desserts.length; i++){
+                                            for(item of dessert){
+                                                if(cartData.desserts[i].itemId == item.itemId){
+                                                    cartData.desserts.splice(i,1);
+                                                    cartData.desserts.push(item);
+                                                } else{
+                                                    cartData.desserts.push(item);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        for(item of dessert){
+                                            cartData.desserts.push(item);
+                                        }
+                                    }
+                                    schreiber.update('shoppingCarts', userData.shoppingCart, cartData, (err) => {
+                                        if(err == 200){
+                                            callback(200, cartData);
+                                        } else {
+                                            callback(500, {'Error':'Could not update Shopping Cart!'});
+                                        }
+                                    });
                                 }
                             });
                         } else {
