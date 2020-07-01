@@ -280,6 +280,11 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   }
 
   // If the user just deleted an item from the shoppingCart, redirect them to the shoppingCart Page
+  if(formId == 'addToCart'){
+    window.location = 'shoppingcarts/all';
+  }
+
+  // If the user just deleted an item from the shoppingCart, redirect them to the shoppingCart Page
   if(formId == 'itemEdit'){
     window.location = 'shoppingcarts/edit';
   }
