@@ -118,10 +118,10 @@ app.logUserOut = function(redirectUser){
   });
 };
 
-// Bind the forms
+// Bind the forms - One of its mains features is to allow on page response to the user
 app.bindForms = function(){
   if(document.querySelector("form")){
-
+    //Store all the forms in the html page
     var allForms = document.querySelectorAll("form");
     for(var i = 0; i < allForms.length; i++){
         allForms[i].addEventListener("submit", function(e){
@@ -192,20 +192,16 @@ app.bindForms = function(){
             }
           }
         }
-
         // If the method is DELETE, the payload should be a queryStringObject instead
         var queryStringObject = method == 'DELETE' ? payload : {};
-        // Call the API
+        // Call the API - Do the actual submit
         app.client.request(undefined,path,method,queryStringObject,payload,function(statusCode,responsePayload){
           // Display an error on the form if needed
           if(statusCode !== 200){
-
             if(statusCode == 403){
               // log the user out
               app.logUserOut();
-
             } else {
-
               // Try to get the error from the api, or set a default error message
               var error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
 
@@ -219,7 +215,6 @@ app.bindForms = function(){
             // If successful, send to form response processor
             app.formResponseProcessor(formId,payload,responsePayload);
           }
-
         });
       });
     }
@@ -265,6 +260,7 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   // If forms saved successfully, and they have success messages, show them
   var formsWithSuccessMessages = ['accountEdit1', 'accountEdit2','itemEdit'];
   if(formsWithSuccessMessages.indexOf(formId) > -1){
+    //Works after the bindForms function has hidden whatever message was previously been shown
     document.querySelector("#"+formId+" .formSuccess").style.display = 'block';
   }
 
@@ -389,8 +385,8 @@ app.loadDataOnPage = function(){
   }
 
   // Logic for dashboard page
-  if(primaryClass == 'checksList'){
-    app.loadChecksListPage();
+  if(primaryClass == 'shoppingItems'){
+    app.loadShoppingCart();
   }
 
   // Logic for check details page
@@ -432,58 +428,55 @@ app.loadAccountEditPage = function(){
 };
 
 // Load the dashboard page specifically
-app.loadChecksListPage = function(){
-  // Get the phone number from the current token, or log the user out if none is there
-  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
-  if(phone){
+app.loadShoppingCart = function(){
+  // Get the e-mail from the current token, or log the user out if none is there
+  var email = typeof(app.config.sessionToken.email) == 'string' ? app.config.sessionToken.email : false;
+  if(email){
     // Fetch the user data
     var queryStringObject = {
-      'phone' : phone
+      'email' : email
     };
     app.client.request(undefined,'api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
       if(statusCode == 200){
-
         // Determine how many checks the user has
-        var allChecks = typeof(responsePayload.checks) == 'object' && responsePayload.checks instanceof Array && responsePayload.checks.length > 0 ? responsePayload.checks : [];
-        if(allChecks.length > 0){
-          // Show each created check as a new row in the table
-          allChecks.forEach(function(checkId){
-            // Get the data for the check
-            var newQueryStringObject = {
-              'id' : checkId
-            };
-            app.client.request(undefined,'api/checks','GET',newQueryStringObject,undefined,function(statusCode,responsePayload){
-              if(statusCode == 200){
-                var checkData = responsePayload;
-                // Make the check data into a table row
-                var table = document.getElementById("checksListTable");
-                var tr = table.insertRow(-1);
-                tr.classList.add('checkRow');
-                var td0 = tr.insertCell(0);
-                var td1 = tr.insertCell(1);
-                var td2 = tr.insertCell(2);
-                var td3 = tr.insertCell(3);
-                var td4 = tr.insertCell(4);
-                td0.innerHTML = responsePayload.method.toUpperCase();
-                td1.innerHTML = responsePayload.protocol+'://';
-                td2.innerHTML = responsePayload.url;
-                var state = typeof(responsePayload.state) == 'string' ? responsePayload.state : 'unknown';
-                td3.innerHTML = state;
-                td4.innerHTML = '<a href="/checks/edit?id='+responsePayload.id+'">View / Edit / Delete</a>';
-              } else {
-                console.log("Error trying to load check ID: ",checkId);
-              }
-            });
-          });
-
-          if(allChecks.length < 5){
-            // Show the createCheck CTA
-            document.getElementById("createCheckCTA").style.display = 'block';
+        var cartId = typeof(responsePayload.shoppingCart) == 'string' ? responsePayload.checks : false;
+        if(cartId){
+          var newQueryStringObject = {
+            'id':cartId
           }
-
+          // Get the data for the check
+          app.client.request(undefined,'api/shoppingcarts','GET',newQueryStringObject,undefined,function(statusCode,responsePayload){
+            if(statusCode == 200){
+              var cart = responsePayload;
+              // Make the check data into a table row
+              var table = document.getElementById("cartTable");
+              var pizzas = cart.pizzas;
+              var drinks = cart.drinks;
+              var desserts = cart.desserts;
+              if(pizzas.length > 0){
+                for(pizza of pizzas){
+                  var tr = table.insertRow(-1);
+                  tr.classList.add('productRow');
+                }
+              }
+              var td0 = tr.insertCell(0);
+              var td1 = tr.insertCell(1);
+              var td2 = tr.insertCell(2);
+              var td3 = tr.insertCell(3);
+              var td4 = tr.insertCell(4);
+              td0.innerHTML = responsePayload.method.toUpperCase();
+              td1.innerHTML = responsePayload.protocol+'://';
+              td2.innerHTML = responsePayload.url;
+              var state = typeof(responsePayload.state) == 'string' ? responsePayload.state : 'unknown';
+              td3.innerHTML = state;
+              td4.innerHTML = '<a href="/checks/edit?id='+responsePayload.id+'">View / Edit / Delete</a>';
+            } else {
+              console.log("Error trying to load check ID: ",checkId);
+            }
+          });
         } else {
           // Show 'you have no checks' message
-          document.getElementById("noChecksMessage").style.display = 'table-row';
+          document.getElementById("noPizzaMessage").style.display = 'table-row';
 
           // Show the createCheck CTA
           document.getElementById("createCheckCTA").style.display = 'block';
