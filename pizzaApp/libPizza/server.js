@@ -27,7 +27,7 @@ server.httpsServer = https.createServer(server.httpsServerOptions,(req, res) => 
     server.unifiedServer(req, res);
 });
 
-//Server seetings -> it processes the incoming url/data embedded in the request object then assigns the associated action to it
+/* Server seetings -> it processes the incoming url/data embedded in the request object then assigns the associated action to it by calling server.route which calls the specific handlers' funcion */
 server.unifiedServer = (req, res) => {
     //get the URl and parse it
     //the true argmnt tells the url module to call the query-stream module
@@ -69,14 +69,20 @@ server.unifiedServer = (req, res) => {
             'payload': tools.parseJsonToObject(buffer) //make sure the incoming data is an Object
         }
 
-        //Verifies the handler (function defined in the handlers file) this request should go to.
-        //If one is not found, it should go to notFound handler.
+        /* 
+            * It stores the specific handler from handlers file.
+            * Verifies the handler (function defined in the handlers file) this request should go to.
+            * If one is not found, it should go to notFound handler.
+        */
         let chosenhandler = typeof(server.router[trimmedPath]) !== 'undefined' ? server.router[trimmedPath] : handlers.notFound;
         
         //if the request is within the public directory, use the public handler instead
         chosenhandler = trimmedPath.indexOf('public/') > -1 ? handlers.public : chosenhandler;
 
-        //setting up a GENERAL router to route the request to the handlers
+        /* 
+            * Calls the handlers function
+            * Sets up a GENERAL scheme to deal with the handlers' function response and route the response back to the browser
+         */
         chosenhandler(data, (statusCode, handlerPayload, contentType) => {
             //Determine the type of response (fallback to JSON)
             contentType = typeof(contentType) == 'string' ? contentType : 'json';
@@ -144,7 +150,10 @@ server.unifiedServer = (req, res) => {
     });
 };
 
-//Define a request router
+/* 
+    * Define a request router
+    * It just stores the key value for mapping-calling the handlers' object 
+*/
 server.router = {
     '': handlers.index,
     'account/create': handlers.accountCreate,
