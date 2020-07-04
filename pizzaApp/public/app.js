@@ -18,6 +18,7 @@ app.client = {}
 app.client.request = function(headers,path,method,queryStringObject,payload,callback){
 
   // Set defaults (except for path & method, the rest are optional)
+  //headers is for addional info, for the token is automatically added at the end of the function
   headers = typeof(headers) == 'object' && headers !== null ? headers : {};
   path = typeof(path) == 'string' ? path : '/'; //default to home page
   method = typeof(method) == 'string' && ['POST','GET','PUT','DELETE'].indexOf(method.toUpperCase()) > -1 ? method.toUpperCase() : 'GET';
@@ -433,53 +434,26 @@ app.loadShoppingCart = function(){
   var email = typeof(app.config.sessionToken.email) == 'string' ? app.config.sessionToken.email : false;
   if(email){
     // Fetch the user data
-    var queryStringObject = {
+    var userStringObject = {
       'email' : email
     };
-    app.client.request(undefined,'api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+    //Get the user's shopping cart id
+    app.client.request(undefined,'api/users','GET',userStringObject,undefined,function(statusCode,responsePayload){
       if(statusCode == 200){
         // Determine how many checks the user has
-        var cartId = typeof(responsePayload.shoppingCart) == 'string' ? responsePayload.checks : false;
+        var cartId = responsePayload.shoppingCart;;
         if(cartId){
-          var newQueryStringObject = {
+          var cartStringObject = {
             'id':cartId
           }
-          // Get the data for the check
-          app.client.request(undefined,'api/shoppingcarts','GET',newQueryStringObject,undefined,function(statusCode,responsePayload){
-            if(statusCode == 200){
-              var cart = responsePayload;
-              // Make the check data into a table row
-              var table = document.getElementById("cartTable");
-              var pizzas = cart.pizzas;
-              var drinks = cart.drinks;
-              var desserts = cart.desserts;
-              if(pizzas.length > 0){
-                for(pizza of pizzas){
-                  var tr = table.insertRow(-1);
-                  tr.classList.add('productRow');
-                }
-              }
-              var td0 = tr.insertCell(0);
-              var td1 = tr.insertCell(1);
-              var td2 = tr.insertCell(2);
-              var td3 = tr.insertCell(3);
-              var td4 = tr.insertCell(4);
-              td0.innerHTML = responsePayload.method.toUpperCase();
-              td1.innerHTML = responsePayload.protocol+'://';
-              td2.innerHTML = responsePayload.url;
-              var state = typeof(responsePayload.state) == 'string' ? responsePayload.state : 'unknown';
-              td3.innerHTML = state;
-              td4.innerHTML = '<a href="/checks/edit?id='+responsePayload.id+'">View / Edit / Delete</a>';
-            } else {
-              console.log("Error trying to load check ID: ",checkId);
-            }
-          });
-        } else {
-          // Show 'you have no checks' message
-          document.getElementById("noPizzaMessage").style.display = 'table-row';
+        //Get the shopping cart data
+        app.client.request(undefined, 'api/shoppingcarts', 'GET', cartStringObject,undefined, function(CartstatusCode, cartData){
+          console.log(CartstatusCode, cartData);
+        });
 
-          // Show the createCheck CTA
-          document.getElementById("createCheckCTA").style.display = 'block';
+        } else {
+          // Show 'you have no items' message
+          document.getElementById("noPizzaMessage").style.display = 'table-row';
 
         }
       } else {
@@ -532,6 +506,19 @@ app.loadChecksEditPage = function(){
     window.location = 'checks/all';
   }
 };
+
+
+app.populateTable = function(obj){
+  var keys = Object.keys(obj);
+  var pop =
+  `<tr>
+      <td>${obj[keys[0]]}</td>
+      <td>${keys[1]}</td>
+      <td>${obj[keys[1]]}</td>
+      <td><a href="/checks/edit?id=${obj.itemId}">View / Edit / Delete</a></td>
+  </tr>`;
+  return pop
+}
 
 // Init (bootstrapping)
 app.init = function(){
