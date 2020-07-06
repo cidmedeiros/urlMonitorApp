@@ -440,22 +440,43 @@ app.loadShoppingCart = function(){
     //Get the user's shopping cart id
     app.client.request(undefined,'api/users','GET',userStringObject,undefined,function(statusCode,responsePayload){
       if(statusCode == 200){
+        //Get the table DOM
+        var table = document.getElementById('cartTable');
         // Determine how many checks the user has
-        var cartId = responsePayload.shoppingCart;;
+        var cartId = responsePayload.shoppingCart;
+        //create next queryString
         if(cartId){
           var cartStringObject = {
             'id':cartId
           }
-        //Get the shopping cart data
-        app.client.request(undefined, 'api/shoppingcarts', 'GET', cartStringObject,undefined, function(CartstatusCode, cartData){
-          console.log(CartstatusCode, cartData);
-        });
-
         } else {
           // Show 'you have no items' message
-          document.getElementById("noPizzaMessage").style.display = 'table-row';
-
+          var noItems = '<tr class = "checkRow"><td>You haven\'t added anything to your cart!</td></tr>';
+          table.insertAdjacentHTML('beforeend', noItems);
         }
+        //Get the shopping cart data
+        app.client.request(undefined, 'api/shoppingcarts', 'GET', cartStringObject,undefined, function(CartstatusCode, cartData){
+          //extract products
+          var pizzas = cartData.pizzas;
+          var drinks = cartData.drinks;
+          var desserts = cartData.desserts;
+          var items = pizzas.concat(drinks);
+          items = items.concat(desserts);
+          if(items.length > 0){
+            var totalPay = 0;
+            for(item of items){
+              var row = app.populateTable(item);
+              totalPay += row.value;
+              table.insertAdjacentHTML('beforeend', row.html);
+            }
+            var totalHtml = `<tr><th>Total</th><td></td><td>${totalPay.toFixed(2)}</td></tr>`;
+            table.insertAdjacentHTML('beforeend', totalHtml);
+          } else {
+            // Show 'you have no items' message
+            var noItems = '<tr class = "checkRow"><td colspan="5">You haven\'t added anything to your cart!</td></tr>';
+            table.insertAdjacentHTML('beforeend', noItems);
+          }
+        });
       } else {
         // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
         app.logUserOut();
@@ -509,15 +530,18 @@ app.loadChecksEditPage = function(){
 
 
 app.populateTable = function(obj){
+  var ans = {}
   var keys = Object.keys(obj);
   var pop =
-  `<tr>
+  `<tr class="checkRow">
       <td>${obj[keys[0]]}</td>
       <td>${keys[1]}</td>
       <td>${obj[keys[1]]}</td>
-      <td><a href="/checks/edit?id=${obj.itemId}">View / Edit / Delete</a></td>
+      <td><a href="/item/edit?id=${obj.itemId}">View/ Edit/ Delete</a></td>
   </tr>`;
-  return pop
+  ans.html = pop;
+  ans.value = obj[keys[1]];
+  return ans
 }
 
 // Init (bootstrapping)
