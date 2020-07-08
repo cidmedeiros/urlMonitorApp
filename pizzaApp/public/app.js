@@ -147,6 +147,7 @@ app.bindForms = function(){
         payload.drink = [];
         payload.dessert = [];
         var elements = this.elements;
+
         for(var i = 0; i < elements.length; i++){
           if(elements[i].type !== 'submit'){
             // Determine class of element and set value accordingly
@@ -271,9 +272,10 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
     window.location = 'account/deleted';
   }
 
-  // If the user just created a new order successfully, redirect back to the ordersList
-  if(formId == 'orderCreate'){
-    window.location = 'orders/all';
+  // If the user just created a new order successfully, redirect back to the order successful page
+  if(formId == 'formOrder'){
+    // If successful, redirect the user to order successful page
+    window.location = 'shoppingcarts/all';
   }
 
   // If the user just deleted an item from the shoppingCart, redirect them to the shoppingCart Page
@@ -455,7 +457,7 @@ app.loadShoppingCart = function(){
           table.insertAdjacentHTML('beforeend', noItems);
         }
         //Get the shopping cart data
-        app.client.request(undefined, 'api/shoppingcarts', 'GET', cartStringObject,undefined, function(CartstatusCode, cartData){
+        app.client.request(undefined,'api/shoppingcarts','GET',cartStringObject,undefined, function(CartstatusCode, cartData){
           //extract products
           var pizzas = cartData.pizzas;
           var drinks = cartData.drinks;
@@ -465,7 +467,7 @@ app.loadShoppingCart = function(){
           if(items.length > 0){
             var totalPay = 0;
             for(item of items){
-              var row = app.populateTable(item);
+              var row = app.populateCart(item);
               totalPay += row.value;
               table.insertAdjacentHTML('beforeend', row.html);
             }
@@ -476,6 +478,10 @@ app.loadShoppingCart = function(){
             var noItems = '<tr class = "checkRow"><td colspan="5">You haven\'t added anything to your cart!</td></tr>';
             table.insertAdjacentHTML('beforeend', noItems);
           }
+          var cartId = cartData.cartId;
+          var hiddenIdInput = `<input type= "hidden" name="shoppingCartId" value=${cartId}>`;
+          var formOrder = document.getElementById("formOrder");
+          formOrder.insertAdjacentHTML('afterbegin', hiddenIdInput);
         });
       } else {
         // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
@@ -529,7 +535,7 @@ app.loadChecksEditPage = function(){
 };
 
 
-app.populateTable = function(obj){
+app.populateCart = function(obj){
   var ans = {}
   var keys = Object.keys(obj);
   var pop =
@@ -537,7 +543,6 @@ app.populateTable = function(obj){
       <td>${obj[keys[0]]}</td>
       <td>${keys[1]}</td>
       <td>${obj[keys[1]]}</td>
-      <td><a href="/item/edit?id=${obj.itemId}">View/ Edit/ Delete</a></td>
   </tr>`;
   ans.html = pop;
   ans.value = obj[keys[1]];
