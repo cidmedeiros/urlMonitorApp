@@ -1056,9 +1056,11 @@ Although a placed order is saved on its own it gets linked to the issuing client
 handlers._orders.post = (data, callback) => {
     /* Required data: shoppingCartId*/
     //check the incoming data
-    const shoppingCartId = typeof(data.shoppingCartId) == 'string' && data.shoppingCartId.length == 20 ? data.shoppingCartId.trim() : false;
-
-    orderCard = typeof(data.cardOrder) === 'string' && config.stripeInfo.card.indexOf(data.cardOrder) > -1 ? data.cardOrder.trim() : false;
+    console.log(typeof(data));
+    console.log(data);
+    const shoppingCartId = typeof(data.payload.shoppingCartId) == 'string' && data.payload.shoppingCartId.length == 20 ? data.payload.shoppingCartId.trim() : false;
+    console.log(shoppingCartId);
+    orderCard = typeof(data.payload.cardOrder) === 'string' && config.stripeInfo.card.indexOf(data.payload.cardOrder) > -1 ? data.payload.cardOrder.trim() : false;
 
     if(shoppingCartId){
         //Get the token from the headers
