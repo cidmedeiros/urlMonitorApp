@@ -163,8 +163,6 @@ server.router = {
     'session/deleted': handlers.sessionDeleted,
     'menu': handlers.menuPage,
     'shoppingcarts/all': handlers.shoppingItems,
-    'shoppingcarts/edit': handlers.shoppingEdit,
-    'orders/all': handlers.ordersList,
     'api/users': handlers.users,
     'api/tokens' : handlers.tokens,
     'api/shoppingcarts' : handlers.shoppingcarts,
