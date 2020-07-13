@@ -387,10 +387,16 @@ app.loadDataOnPage = function(){
     app.loadAccountEditPage();
   }
 
-  // Logic for dashboard page
+  // Logic for shoppingItems page
   if(primaryClass == 'shoppingItems'){
     app.loadShoppingCart();
   }
+
+  // Logic for successfulPage page
+  if(primaryClass == 'successfulPage'){
+    app.loadSuccessPage();
+  }
+
 };
 
 // Load the account edit page specifically
@@ -488,48 +494,6 @@ app.loadShoppingCart = function(){
   }
 };
 
-// Load the checks edit page specifically
-app.loadChecksEditPage = function(){
-  // Get the check id from the query string, if none is found then redirect back to dashboard
-  var id = typeof(window.location.href.split('=')[1]) == 'string' && window.location.href.split('=')[1].length > 0 ? window.location.href.split('=')[1] : false;
-  if(id){
-    // Fetch the check data
-    var queryStringObject = {
-      'id' : id
-    };
-    app.client.request(undefined,'api/checks','GET',queryStringObject,undefined,function(statusCode,responsePayload){
-      if(statusCode == 200){
-
-        // Put the hidden id field into both forms
-        var hiddenIdInputs = document.querySelectorAll("input.hiddenIdInput");
-        for(var i = 0; i < hiddenIdInputs.length; i++){
-            hiddenIdInputs[i].value = responsePayload.id;
-        }
-
-        // Put the data into the top form as values where needed
-        document.querySelector("#checksEdit1 .displayIdInput").value = responsePayload.id;
-        document.querySelector("#checksEdit1 .displayStateInput").value = responsePayload.state;
-        document.querySelector("#checksEdit1 .protocolInput").value = responsePayload.protocol;
-        document.querySelector("#checksEdit1 .urlInput").value = responsePayload.url;
-        document.querySelector("#checksEdit1 .methodInput").value = responsePayload.method;
-        document.querySelector("#checksEdit1 .timeoutInput").value = responsePayload.timeoutSeconds;
-        var successCodeCheckboxes = document.querySelectorAll("#checksEdit1 input.successCodesInput");
-        for(var i = 0; i < successCodeCheckboxes.length; i++){
-          if(responsePayload.successCodes.indexOf(parseInt(successCodeCheckboxes[i].value)) > -1){
-            successCodeCheckboxes[i].checked = true;
-          }
-        }
-      } else {
-        // If the request comes back as something other than 200, redirect back to dashboard
-        window.location = 'checks/all';
-      }
-    });
-  } else {
-    window.location = 'checks/all';
-  }
-};
-
-
 app.populateCart = function(obj){
   var ans = {}
   var keys = Object.keys(obj);
@@ -543,6 +507,20 @@ app.populateCart = function(obj){
   ans.value = obj[keys[1]];
   return ans
 }
+
+// Load the dashboard page specifically
+app.loadSuccessPage = function(){
+  // Get the e-mail from the current token, or log the user out if none is there
+  var email = typeof(app.config.sessionToken.email) == 'string' ? app.config.sessionToken.email : false;
+  if(email){
+    //Get the table DOM
+    var titles = document.getElementById('title');
+    var msg = `<h2>A Receipt Has Been Sent To<span style="color:blue; font-weight:bold"> ${email}</span></h2>`
+    titles.insertAdjacentHTML('beforeend', msg);
+  } else {
+    app.logUserOut();
+  }
+};
 
 // Init (bootstrapping)
 app.init = function(){

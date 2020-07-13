@@ -235,7 +235,7 @@ handlers.successPage = (data,callback) => {
       // Prepare data for interpolation
       var templateData = {
         'head.title' : 'Your Order Has Been Placed',
-        'body.class' : 'shoppingItems'
+        'body.class' : 'successfulPage'
       };
       // Read in a template as a string
       tools.getTemplate('successPage',templateData, (err,str) => {
@@ -1086,10 +1086,7 @@ Although a placed order is saved on its own it gets linked to the issuing client
 handlers._orders.post = (data, callback) => {
     /* Required data: shoppingCartId*/
     //check the incoming data
-    console.log(typeof(data));
-    console.log(data);
     const shoppingCartId = typeof(data.payload.shoppingCartId) == 'string' && data.payload.shoppingCartId.length == 20 ? data.payload.shoppingCartId.trim() : false;
-    console.log(shoppingCartId);
     orderCard = typeof(data.payload.cardOrder) === 'string' && config.stripeInfo.card.indexOf(data.payload.cardOrder) > -1 ? data.payload.cardOrder.trim() : false;
 
     if(shoppingCartId){
