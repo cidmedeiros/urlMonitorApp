@@ -275,7 +275,7 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   // If the user just created a new order successfully, redirect back to the order successful page
   if(formId == 'formOrder'){
     // If successful, redirect the user to order successful page
-    window.location = 'shoppingcarts/all';
+    window.location = 'successpage/info';
   }
 
   // If the user just deleted an item from the shoppingCart, redirect them to the shoppingCart Page
@@ -390,11 +390,6 @@ app.loadDataOnPage = function(){
   // Logic for dashboard page
   if(primaryClass == 'shoppingItems'){
     app.loadShoppingCart();
-  }
-
-  // Logic for check details page
-  if(primaryClass == 'checksEdit'){
-    app.loadChecksEditPage();
   }
 };
 
