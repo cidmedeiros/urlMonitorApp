@@ -401,24 +401,25 @@ app.loadDataOnPage = function(){
 
 // Load the account edit page specifically
 app.loadAccountEditPage = function(){
-  // Get the phone number from the current token, or log the user out if none is there
-  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
-  if(phone){
+  // Get the email from the current token, or log the user out if none is there
+  var email = typeof(app.config.sessionToken.email) == 'string' ? app.config.sessionToken.email : false;
+  if(email){
     // Fetch the user data
     var queryStringObject = {
-      'phone' : phone
+      'email' : email
     };
     app.client.request(undefined,'api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
       if(statusCode == 200){
         // Put the data into the forms as values where needed
         document.querySelector("#accountEdit1 .firstNameInput").value = responsePayload.firstName;
         document.querySelector("#accountEdit1 .lastNameInput").value = responsePayload.lastName;
-        document.querySelector("#accountEdit1 .displayPhoneInput").value = responsePayload.phone;
+        document.querySelector("#accountEdit1 .displayEmailInput").value = responsePayload.email;
+        document.querySelector("#accountEdit1 .adressInput").value = responsePayload.streetAddress;
 
-        // Put the hidden phone field into both forms
-        var hiddenPhoneInputs = document.querySelectorAll("input.hiddenPhoneNumberInput");
-        for(var i = 0; i < hiddenPhoneInputs.length; i++){
-            hiddenPhoneInputs[i].value = responsePayload.phone;
+        // Put the hidden email field into both forms
+        var hiddenEmailInput = document.querySelectorAll("input.hiddenEmailInput");
+        for(var i = 0; i < hiddenEmailInput.length; i++){
+          hiddenEmailInput[i].value = responsePayload.email;
         }
 
       } else {
