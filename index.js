@@ -20,7 +20,7 @@ app.init = () => {
 
     //Start the CLI, but make sure it starts last so worker can load up all the logs and other related data
     setTimeout(() => {
-        cli.int();
+        cli.init();
     }, 50);
 
 };
