@@ -265,5 +265,13 @@ tools.getStaticAsset = (fileName,callback) => {
     }
 };
 
+// Check if timestamp is within the last 24 hous
+tools.is24 = (date1) => {
+    var timeStamp = Math.round(new Date().getTime() / 1000);
+    var timeStampYesterday = timeStamp - (24 * 3600);
+    var is24 = date1 >= new Date(timeStampYesterday*1000).getTime();
+    return is24;
+}
+
 //Export tools
 module.exports = tools;

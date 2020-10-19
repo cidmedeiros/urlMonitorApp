@@ -11,6 +11,7 @@ class _events extends events{};
 const e = new _events();
 const schreiber = require('./schreiber');
 const tools = require('./tools');
+const fs = require('fs');
 
 // Instantiate the cli module object
 var cli = {};
@@ -31,20 +32,20 @@ e.on('exit',function(str){
 e.on('menu',function(str){
   cli.responders.menu();
 });
-  
-e.on('list users',function(str){
-  cli.responders.listOrders();
+
+e.on('list orders',function(str){
+  cli.responders.listOrders(str);
 });
   
-e.on('more user info',function(str){
+e.on('more order info',function(str){
   cli.responders.moreOrderInfo(str);
 });
   
-e.on('list checks',function(str){
-  cli.responders.listUsers(str);
+e.on('list users',function(str){
+  cli.responders.listUsers();
 });
   
-e.on('more check info',function(str){
+e.on('more user info',function(str){
   cli.responders.moreUserInfo(str);
 });
   
@@ -134,28 +135,24 @@ cli.responders.menu = function(){
 
 // List Orders
 cli.responders.listOrders = function(str){
-  schreiber.list('checks',function(err,checkIds){
-    if(!err && checkIds && checkIds.length > 0){
+  schreiber.list('orders',function(err,orderIds){
+    if(!err && orderIds && orderIds.length > 0){
       cli.verticalSpace();
-      checkIds.forEach(function(checkId){
-        schreiber.read('checks',checkId,function(err,checkData){
-          if(!err && checkData){
-            var includeCheck = false;
-            var lowerString = str.toLowerCase();
-            // Get the state, default to down
-            var state = typeof(checkData.state) == 'string' ? checkData.state : 'down';
-            // Get the state, default to unknown
-            var stateOrUnknown = typeof(checkData.state) == 'string' ? checkData.state : 'unknown';
-            // If the user has specified that state, or hasn't specified any state
-            if((lowerString.indexOf('--'+state) > -1) || (lowerString.indexOf('--down') == -1 && lowerString.indexOf('--up') == -1)){
-              var line = 'ID: '+checkData.id+' '+checkData.method.toUpperCase()+' '+checkData.protocol+'://'+checkData.url+' State: '+stateOrUnknown;
+      orderIds.forEach(function(orderId){
+        schreiber.read('orders',orderId,function(err,orderData){
+          if(!err && orderData){
+            // Get the order date
+            var fileName = schreiber.baseDir+'orders'+'/'+orderId+'.json';
+            var orderDate = fs.statSync(fileName);
+            if(tools.is24(orderDate.mtime)){
+              var line = 'ID: '+orderId+' -- '+'Amount: '+orderData.amount+' -- '+'Date: '+orderDate.mtime;
               console.log(line);
               cli.verticalSpace();
-            }
-          }
+            };
+          };
         });
       });
-    }
+    };
   });
 };
 
