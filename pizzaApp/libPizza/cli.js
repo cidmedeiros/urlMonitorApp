@@ -160,15 +160,14 @@ cli.responders.listOrders = function(str){
 cli.responders.moreOrderInfo = function(str){
   // Get ID from string
   var arr = str.split('--');
-  var checkId = typeof(arr[1]) == 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
-  if(checkId){
+  var orderId = typeof(arr[1]) == 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
+  if(orderId){
     // Lookup the user
-    schreiber.read('checks',checkId,function(err,checkData){
-      if(!err && checkData){
-
+    schreiber.read('orders',orderId, (err,orderData) =>{
+      if(!err && orderData){
         // Print their JSON object with text highlighting
         cli.verticalSpace();
-        console.dir(checkData,{'colors' : true});
+        console.dir(orderData,{'colors' : true});
         cli.verticalSpace();
       }
     });
