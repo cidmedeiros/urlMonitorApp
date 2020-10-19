@@ -182,15 +182,18 @@ cli.responders.listUsers = function(){
       userIds.forEach(function(userId){
         schreiber.read('users',userId,function(err,userData){
           if(!err && userData){
-            var line = 'Name: '+userData.firstName+' '+userData.lastName+' Phone: '+userData.phone+' Checks: ';
-            var numberOfChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array && userData.checks.length > 0 ? userData.checks.length : 0;
-            line+=numberOfChecks;
-            console.log(line);
-            cli.verticalSpace();
-          }
+            // Get the order date
+            var fileName = schreiber.baseDir+'users'+'/'+userId+'.json';
+            var userDate = fs.statSync(fileName);
+            if(tools.is24(userDate.mtime)){
+              var line = 'Email: '+userData.email+' -- '+'Date: '+userDate.mtime;
+              console.log(line);
+              cli.verticalSpace();
+            };
+          };
         });
       });
-    }
+    };
   });
 };
 
