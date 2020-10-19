@@ -201,10 +201,10 @@ cli.responders.listUsers = function(){
 cli.responders.moreUserInfo = function(str){
   // Get ID from string
   var arr = str.split('--');
-  var userId = typeof(arr[1]) == 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
-  if(userId){
+  var userEmail = typeof(arr[1]) == 'string' && arr[1].trim().length > 0 ? arr[1].trim() : false;
+  if(userEmail){
     // Lookup the user
-    schreiber.read('users',userId,function(err,userData){
+    schreiber.read('users',userEmail, (err,userData) =>{
       if(!err && userData){
         // Remove the hashed password
         delete userData.hashedPassword;
