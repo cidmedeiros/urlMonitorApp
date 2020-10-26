@@ -60,7 +60,7 @@ server.unifiedServer = (req, res) => {
         //cuts off data stream
         buffer += decoder.end();
 
-        //construct the data object to send to the chosenhandler
+        //construct the data object to send to the chosenHandler
         let data = {
             'trimmedPath': trimmedPath,
             'queryStringObject': queryStringObject,
@@ -69,87 +69,99 @@ server.unifiedServer = (req, res) => {
             'payload': tools.parseJsonToObject(buffer) //make sure the incoming data is an Object
         }
 
-        /* 
-            * It stores the specific handler from handlers file.
-            * Verifies the handler (function defined in the handlers file) this request should go to.
-            * If one is not found, it should go to notFound handler.
-        */
-        let chosenhandler = typeof(server.router[trimmedPath]) !== 'undefined' ? server.router[trimmedPath] : handlers.notFound;
-        
+        //Verifies the handler this request should go to.
+        //If one is not found, it should go to notFound handler.
+        let chosenHandler = typeof(server.router[trimmedPath]) !== 'undefined' ? server.router[trimmedPath] : handlers.notFound;
+
         //if the request is within the public directory, use the public handler instead
-        chosenhandler = trimmedPath.indexOf('public/') > -1 ? handlers.public : chosenhandler;
+        chosenHandler = trimmedPath.indexOf('public/') > -1 ? handlers.public : chosenHandler;
 
-        /* 
-            * Calls the handlers function
-            * Sets up a GENERAL scheme to deal with the handlers' function response and route the response back to the browser
-         */
-        chosenhandler(data, (statusCode, handlerPayload, contentType) => {
-            //Determine the type of response (fallback to JSON)
-            contentType = typeof(contentType) == 'string' ? contentType : 'json';
-
-            //use the handler statusCode or default to 200
-            statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
-
-            //Return the response-parts that are content-specific (sets header and payloads the content)
-            var handlerPayloadString = ''
-            if(contentType == 'json'){
-                res.setHeader('Content-Type', 'application/json');
-                //use the handler payload object if any or default to {}
-                handlerPayload = typeof(handlerPayload) == 'object' ? handlerPayload : {};
-                //convert the handlerPayload to String
-                handlerPayloadString = JSON.stringify(handlerPayload);
-            }
-            if(contentType == 'html'){
-                res.setHeader('Content-Type', 'text/html');
-                handlerPayload = typeof(handlerPayload) == 'string' ? handlerPayload : '';
-                //Use the universal default variable
-                handlerPayloadString = handlerPayload;
-            }
-            if(contentType == 'css'){
-                res.setHeader('Content-Type', 'text/css');
-                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
-                //Use the universal default variable
-                handlerPayloadString = handlerPayload;
-            }
-            if(contentType == 'favicon'){
-                res.setHeader('Content-Type', 'image/x-icon');
-                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
-                //Use the universal default variable
-                handlerPayloadString = handlerPayload;
-            }
-            if(contentType == 'png'){
-                res.setHeader('Content-Type', 'image/png');
-                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
-                //Use the universal default variable
-                handlerPayloadString = handlerPayload;
-            }
-            if(contentType == 'jpg'){
-                res.setHeader('Content-Type', 'image/jpeg');
-                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
-                //Use the universal default variable
-                handlerPayloadString = handlerPayload;
-            }
-            if(contentType == 'plain'){
-                res.setHeader('Content-Type', 'text/plain');
-                handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
-                //Use the universal default variable
-                handlerPayloadString = handlerPayload;
-            }
-
-            //Return the response-parts that are common
-            res.writeHead(statusCode);
-            res.end(handlerPayloadString);
-
-            //if the response is 200 print green, otherwise print red
-            if(statusCode == 200){
-                debug('\x1b[32m%s\x1b[0m',`${method.toUpperCase()} /${trimmedPath} ${statusCode}}`);
-            } else {
-                debug('\x1b[31m%s\x1b[0m',`${method.toUpperCase()} /${trimmedPath} ${statusCode}}`);
-            }
+        /* Setting up a GENERAL data handler in order to create a response.
+        The general handler executes the chosen handler which hydrates
+        the general handler callback (statusCode, handlerPayload, contentType).
+        The hydrated callback is used to craft a http response to the request received.
+        */
+                
+         // Route the request to the handler specified in the router
+       try{
+        chosenHandler(data,function(statusCode,handlerPayload,contentType){
+          server.processHandlerResponse(res,method,trimmedPath,statusCode,handlerPayload,contentType);
         });
+      }catch(e){
+        debug(e);
+        server.processHandlerResponse(res,method,trimmedPath,500,{'Error' : 'An unknown error has occured'},'json');
+      }
+    
     });
 };
 
+//Process the response from the handler
+server.processHandlerResponse = function(res,method,trimmedPath,statusCode,handlerPayload,contentType){
+    //Determine the type of response (fallback to JSON)
+    contentType = typeof(contentType) == 'string' ? contentType : 'json';
+
+    //use the handler statusCode or default to 200
+    statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+
+    //Return the response-parts that are content-specific (sets header and payloads the content)
+    var handlerPayloadString = ''
+    if(contentType == 'json'){
+        res.setHeader('Content-Type', 'application/json');
+        //use the handler payload object if any or default to {}
+        handlerPayload = typeof(handlerPayload) == 'object' ? handlerPayload : {};
+        //convert the handlerPayload to String
+        handlerPayloadString = JSON.stringify(handlerPayload);
+    }
+    if(contentType == 'html'){
+        res.setHeader('Content-Type', 'text/html');
+        handlerPayload = typeof(handlerPayload) == 'string' ? handlerPayload : '';
+        //Use the universal default variable
+        handlerPayloadString = handlerPayload;
+    }
+    if(contentType == 'css'){
+        res.setHeader('Content-Type', 'text/css');
+        handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+        //Use the universal default variable
+        handlerPayloadString = handlerPayload;
+    }
+    if(contentType == 'favicon'){
+        res.setHeader('Content-Type', 'image/x-icon');
+        handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+        //Use the universal default variable
+        handlerPayloadString = handlerPayload;
+    }
+    if(contentType == 'png'){
+        res.setHeader('Content-Type', 'image/png');
+        handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+        //Use the universal default variable
+        handlerPayloadString = handlerPayload;
+    }
+    if(contentType == 'jpg'){
+        res.setHeader('Content-Type', 'image/jpeg');
+        handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+        //Use the universal default variable
+        handlerPayloadString = handlerPayload;
+    }
+    if(contentType == 'plain'){
+        res.setHeader('Content-Type', 'text/plain');
+        handlerPayload = typeof(handlerPayload) !== 'undefined' ? handlerPayload : '';
+        //Use the universal default variable
+        handlerPayloadString = handlerPayload;
+    }
+
+    //Return the response-parts that are common
+    res.writeHead(statusCode);
+    res.end(handlerPayloadString); //give back to the browser the data requested
+
+    //if the response is 200 print green, otherwise print red
+    if(statusCode == 200){
+        debug('\x1b[32m%s\x1b[0m',`${method.toUpperCase()} /${trimmedPath} ${statusCode}}`);
+    } else {
+        debug('\x1b[31m%s\x1b[0m',`${method.toUpperCase()} /${trimmedPath} ${statusCode}}`);
+    }
+}
+
+//Define a request router. It points to a function on the handlers module to get called upon.
 /* 
     * Define a request router
     * It just stores the key value for mapping-calling the handlers' object 
@@ -170,7 +182,8 @@ server.router = {
     'api/menu': handlers.menu,
     'api/orders': handlers.orders,
     'favicon.ico': handlers.favicon,
-    'public': handlers.public
+    'public': handlers.public,
+    'examples/error' : handlers.exampleError
 };
 
 //Define server init function

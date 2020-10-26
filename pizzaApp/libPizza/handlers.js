@@ -134,7 +134,7 @@ handlers.accountEdit = (data,callback) => {
     } else {
       callback(405,undefined,'html');
     }
-  };
+};
 
 // Session has been deleted
 handlers.sessionDeleted = (data,callback) => {
@@ -348,7 +348,7 @@ handlers._menu.get = (menu, callback) => {
         callback(500,undefined,'html');
         }
     });
-}
+};
 
 /*
     **JSON API HANDLERS
@@ -826,7 +826,7 @@ handlers._tokens.verifyExpiredToken = (token, callback) => {
             callback(false, {'Error': 'Could not find the specified token!'});
         }
     });
-} 
+};
 
 //ShoppingCart function to handle all possible related http verbs
 handlers.shoppingcarts = (data, callback) => {
@@ -1186,7 +1186,7 @@ handlers._orders.post = (data, callback) => {
     } else {
         callback(400, {'Error':'Missing or invalid required field!'});
     }
-}
+};
 
 //Define Orders get submethod -> it looks up an order
 handlers._orders.get = (data, callback) => {
@@ -1231,12 +1231,18 @@ handlers._orders.get = (data, callback) => {
     } else{
         callback(400, {'Error':'Missing or invalid required field!'});
     }
-}
+};
+
+//Example Error
+handlers.exampleError = function(data, callback){
+    var err = new Error('This is an example Error'); //the Error class is globally available and there's no need to require it
+    throw(err);
+};
 
 //Not found handler
 handlers.notFound = (data, callback) => {
     callback(404);
-}
+};
 
 //Export handlers
 module.exports = handlers;
