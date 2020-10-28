@@ -1,5 +1,5 @@
 /*
- * Test runner
+ * Test caller
  *
  */
 
@@ -10,7 +10,7 @@ _app = {};
 _app.tests = {};
 
 // Dependencies
-_app.tests.lib = require('../app/lib');
+_app.tests.testRunner = require('./test/testRunner');
 
 // Count all the tests
 _app.countTests = function(){
