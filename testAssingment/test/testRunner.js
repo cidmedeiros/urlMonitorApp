@@ -11,7 +11,7 @@ var unit = {};
 
 // Assert that the EvenNumber function is returning a number
 unit['lib.EvenNumber should return a boolean'] = function(done){
-  var val = lib.evenNumber(2);
+  var val = lib.evenNumber(4);
   assert.strictEqual(typeof(val), 'boolean');
   done();
 };
@@ -40,14 +40,14 @@ unit['lib.oddNumber should return a boolean'] = function(done){
 // Assert that the oddNumber function is returning an odd number
 unit['lib.oddNumber should return an odd number'] = function(done){
   var val = lib.oddNumber(5);
-  assert.notStrictEqual(val,true);
+  assert.strictEqual(val,true);
   done();
 };
 
 // Assert that the oddNumber function is not returning 0
 unit['lib.oddNumberOne should return true'] = function(done){
   var val = lib.oddNumber(5);
-  assert.notStrictEqual(val, false);
+  assert.strictEqual(val, false);
   done();
 };
 
