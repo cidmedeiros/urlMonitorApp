@@ -4,8 +4,21 @@
 var lib = {};
 
 lib.evenNumber = function(val){
-    return val % 2
+    let ans = val % 2
+    if(ans == 0){
+        return true;
+    } else{
+        return false;
+    }
 };
 
+lib.oddNumber = function(val){
+    let ans = val % 2
+    if(ans == 0){
+        return false;
+    } else{
+        return true;
+    }
+};
 
 module.exports = lib;
