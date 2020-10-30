@@ -21,4 +21,18 @@ lib.oddNumber = function(val){
     }
 };
 
+lib.palindrome = function(str) {
+    let arrChar = str.split("");
+    let arrReversed = arrChar.reverse("");
+    let wordReversed = arrReversed.join("");
+    wordReversed = wordReversed.toLowerCase().replace(/[^0-9a-z]/gi, '');
+    str = str.toLowerCase().replace(/[^0-9a-z]/gi, '');
+
+    if(wordReversed == str){
+        return true;
+    } else{
+        return false;
+    }
+}
+
 module.exports = lib;
