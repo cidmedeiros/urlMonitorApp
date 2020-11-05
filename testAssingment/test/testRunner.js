@@ -72,6 +72,5 @@ unit['lib.palindrome should return true'] = function(done){
   done();
 };
 
-
 // Export the tests to the runner
 module.exports = unit;
